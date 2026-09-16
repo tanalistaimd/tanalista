@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Análise estática e build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Valida o wrapper do Gradle
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Configura o JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configura o Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-37'
+
+      - name: Configura o Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: ktlint e detekt
+        run: ./gradlew ktlintCheck detekt --no-daemon
+
+      - name: Build do APK de depuração
+        run: ./gradlew :composeApp:assembleDebug --no-daemon
+
+      - name: Publica os relatórios quando algo falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios
+          path: |
+            composeApp/build/reports/ktlint/
+            composeApp/build/reports/detekt/
+          if-no-files-found: ignore
+          retention-days: 7
