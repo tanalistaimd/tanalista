@@ -56,7 +56,7 @@ Duas consequências entraram direto na modelagem:
 
 ## 3. Backlog inicial
 
-Quadro no GitHub Projects: <https://github.com/users/thallystorres/projects/2>. O backlog é o mesmo de DIM0524 — a diferença entre as disciplinas está nos artefatos de processo, não no produto.
+Quadro no GitHub Projects: <https://github.com/orgs/tanalistaimd/projects/2>. O backlog é o mesmo de DIM0524 — a diferença entre as disciplinas está nos artefatos de processo, não no produto.
 
 | Prio | História | Critérios de aceitação | Est. | Sprint |
 | --- | --- | --- | --- | --- |
@@ -204,6 +204,6 @@ Os três cursam DIM0510 e DIM0524. Vinicius cursa também DIM0547, onde responde
 
 **Coorte de apresentação:** B — online
 
-**Quadro no GitHub Projects:** <https://github.com/users/thallystorres/projects/2>
+**Quadro no GitHub Projects:** <https://github.com/orgs/tanalistaimd/projects/2>
 
 **Integração entre disciplinas:** o mesmo produto é desenvolvido em **DIM0524 — Sistemas para Dispositivos Móveis**, pela equipe inteira, e em **DIM0547 — Desenvolvimento de Sistemas Web II**, por Vinicius. Os entregáveis são distintos: lá o objeto avaliado é o aplicativo e o backend; aqui, o processo — acordo de processo, métricas de fluxo, DORA, VSM, retrospectivas e relatório final —, artefatos que existem apenas nesta disciplina. Repositórios vinculados nos READMEs.

@@ -117,7 +117,7 @@ A camada de domínio não importa Compose nem infraestrutura.
 
 ## Processo
 
-Quadro Kanban: <https://github.com/users/thallystorres/projects/2>
+Quadro Kanban: <https://github.com/orgs/tanalistaimd/projects/2>
 
 | Coluna | O que autoriza entrar | WIP |
 | --- | --- | --- |

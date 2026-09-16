@@ -53,7 +53,7 @@ O que isso impõe ao aplicativo: entrada de item barata o bastante para caber nu
 
 ## 3. Backlog inicial
 
-Quadro no GitHub Projects: <https://github.com/users/thallystorres/projects/2>. Estimativa em pontos de história, escala de Fibonacci.
+Quadro no GitHub Projects: <https://github.com/orgs/tanalistaimd/projects/2>. Estimativa em pontos de história, escala de Fibonacci.
 
 | Prio | História | Critérios de aceitação | Est. | Sprint |
 | --- | --- | --- | --- | --- |

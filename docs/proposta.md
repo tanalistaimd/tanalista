@@ -46,7 +46,7 @@ ser revisitada contra esse dado.
 
 | O quê | Onde |
 | --- | --- |
-| Quadro Kanban, backlog e histórias | <https://github.com/users/thallystorres/projects/2> |
+| Quadro Kanban, backlog e histórias | <https://github.com/orgs/tanalistaimd/projects/2> |
 | Backend, em DIM0547 | <https://github.com/vbarbosadev/tanalista-api> |
 | Contrato com a API | [`contrato-api.md`](contrato-api.md) |
 | Decisões técnicas registradas | [`decisoes/`](decisoes/) |
