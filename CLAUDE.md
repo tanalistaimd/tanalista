@@ -138,9 +138,25 @@ compilar, rodar e ser demonstrável com a segunda enquanto o backend não existi
 
 ## Ambiente
 
-- Linux (Omarchy), Android Studio, JDK 17
-- Gradle roda nativo, direto do terminal
-- Dispositivo de teste: emulador Android de tela média
+Requisitos do projeto, não de uma máquina em particular. Linux, macOS e Windows
+servem; cada integrante monta o resto como preferir.
+
+- **Gradle pelo wrapper, sempre**: `./gradlew` (`gradlew.bat` no Windows). Nunca um
+  Gradle instalado no sistema — a versão do wrapper é a que o CI usa, e divergir dela
+  é a forma mais comum de "funciona aqui e quebra no pipeline".
+- **JDK**: o alvo de compilação é o 17, declarado por `jvmToolchain(17)` no bloco
+  `kotlin { }`. Não é preciso ter o 17 instalado: o `foojay-resolver-convention` no
+  `settings.gradle.kts` baixa o toolchain quando falta. Qualquer JDK recente roda o
+  Gradle.
+- **Android SDK** com a `compileSdk` declarada em `gradle/libs.versions.toml`. O
+  caminho fica em `local.properties`, que é de cada máquina e não é versionado.
+- **IDE**: Android Studio é o caminho conhecido — o alvo desktop e os `@Preview`
+  funcionam nele sem configuração extra. IntelliJ IDEA com o plugin Android também
+  serve. Nada no projeto depende de IDE: build, análise estática e testes rodam pelo
+  terminal, que é como o CI os executa.
+- **Teste manual**: emulador ou aparelho Android para o alvo Android, `:composeApp:run`
+  para o desktop. Os critérios de aceitação da Definição de Pronto são verificados no
+  Android.
 
 ## Portão de qualidade do CI
 
