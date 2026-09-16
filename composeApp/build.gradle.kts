@@ -6,9 +6,13 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
         compilations.all {
             compileTaskProvider.configure {
@@ -86,4 +90,15 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("detekt.yml"))
+    source.setFrom(
+        "src/commonMain/kotlin",
+        "src/commonTest/kotlin",
+        "src/androidMain/kotlin",
+        "src/desktopMain/kotlin",
+    )
 }
