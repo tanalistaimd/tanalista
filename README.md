@@ -15,6 +15,13 @@ acompanhar o total do carrinho em tempo real. Funciona integralmente offline.
 
 **UFRN/DIMAp · 2026.2 · Coorte B — online**
 
+## Videos
+
+| Sprint | Disciplina | Link |
+| --- | --- | --- |
+| S0 | Processos | [Video](https://drive.google.com/file/d/1NEeRK6f56SY1XePAM1vV2U4zZLVNjdLq/view?usp=drive_link) |
+| S0 | Dispositivos Móveis | [Video](https://drive.google.com/file/d/1aCfptLRS1EZXZ02XfxeIgZlD6x8DVuiZ/view?usp=drive_link) |
+
 ## Equipe
 
 | Nome | Matrícula | GitHub | Papel na Sprint 0 |
