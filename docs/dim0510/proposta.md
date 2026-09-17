@@ -1,6 +1,8 @@
 # Proposta — TáNaLista
 
-**DIM0524 — Desenvolvimento de Sistemas para Dispositivos Móveis · Sprint 0 · 2026.2**
+**DIM0510 — Processos de Software · Sprint 0 · 2026.2**
+
+> Visão do produto, MVP e backlog são comuns à proposta de DIM0524. O acordo de processo (§5) é o artefato exclusivo desta disciplina.
 
 ---
 
@@ -16,11 +18,20 @@ Diferente de aplicativos de lista que só registram nomes de produtos
 Nosso produto separa planejar de comprar e funciona sem sinal no corredor
 ```
 
-**Hipótese de valor.** Acreditamos que quem faz a compra do mês vai abrir o aplicativo no corredor, e não só em casa, porque saber o total antes do caixa evita a devolução de item na fila — e que vai continuar preenchendo preço porque esse é o dado que produz o total.
+**Hipótese de valor.** Acreditamos que quem faz a compra do mês vai abrir o aplicativo no corredor, e não só em casa, porque saber o total antes do caixa evita devolver item na fila.
 
-**Público.** Domicílios que fazem uma compra grande mensal e complementos semanais, em que mais de uma pessoa mexe na mesma lista. Aparelho Android de faixa intermediária, uma mão ocupada com o carrinho, sinal ruim dentro da loja.
+**Público.** Domicílios com uma compra grande mensal e complementos semanais, em que mais de uma pessoa mexe na mesma lista.
 
-**Evidência do problema.** _[Preencher: quantas pessoas entrevistadas, como fazem a lista hoje, se estimam o total antes do caixa, com que frequência devolvem item por estourar o orçamento.]_
+**Evidência do problema.** A origem do produto é observação direta, e é assim que ela deve ser lida: conversamos informalmente com colegas de curso, com familiares que fazem a compra da casa e entre os próprios integrantes da equipe. Não houve roteiro, amostra nem registro sistemático.
+
+O relato se repetiu nos três grupos. Em lares com jovens adultos, a lista de compras simplesmente não existe de forma organizada — ninguém tem tempo de sentar e escrever tudo à mão. O que sobra é memória, mensagem solta no grupo da família e papel que se perde no caminho. Compra-se repetido, esquece-se o essencial, e o quanto se gastou só aparece no caixa.
+
+Duas consequências entraram direto na modelagem:
+
+1. **A lista precisa ser reutilizável.** Se o custo de escrever a lista é justamente o que impede a lista de existir, o produto não pode cobrar esse custo de novo todo mês. É o que sustenta a separação entre `Lista` e `Compra`: a lista é escrita uma vez e reaproveitada, e cada ida ao mercado é um registro novo sobre ela.
+2. **Mais de uma pessoa mexe na mesma lista.** "Manda no grupo o que faltou" é compartilhamento já acontecendo, fora de qualquer ferramenta. Lista compartilhada não é recurso avançado aqui: é o comportamento atual, mal servido.
+
+**O que esta evidência ainda não é.** Conversa informal não mede frequência, não quantifica gasto excedente e não prova que o total no corredor seja o dado que falta — isso permanece hipótese da equipe, não achado. A Sprint 1 abre com um roteiro curto de entrevista, aplicado às mesmas pessoas e registrado em `docs/pesquisa/`, e a priorização do backlog passa a ser revisitada contra esse dado, não contra preferência técnica. Se a entrevista mostrar que o obstáculo real é montar a lista, e não acompanhar o total, a ordem do backlog muda — e essa inversão é um resultado aceitável, não um fracasso.
 
 ---
 
@@ -39,97 +50,160 @@ Nosso produto separa planejar de comprar e funciona sem sinal no corredor
 | Leitura de código de barras para adicionar item | iOS como plataforma prioritária |
 | Exportar e compartilhar uma lista pelo seletor do sistema | |
 
-**Regra do total.** O total do carrinho soma apenas itens marcados como comprados, com o preço encontrado e a quantidade efetivamente levada — não o preço estimado no planejamento. Um total que mistura planejado e comprado não serve para decidir nada no caixa, que é o momento em que o número importa.
-
-**Critérios de sucesso do MVP.** Uma compra real de mês registrada de ponta a ponta pelo aplicativo, com o total conferindo com o cupom fiscal dentro da margem dos itens não previstos; uma lista compartilhada e usada por duas pessoas; nenhuma perda de marcação em uso offline com o modo avião ligado durante toda a compra.
+**Critérios de sucesso.** Uma compra real de mês registrada de ponta a ponta pelo aplicativo, com o total conferindo com o cupom fiscal; uma lista compartilhada e usada por duas pessoas; nenhuma perda de marcação em uso offline com o modo avião ligado durante toda a compra.
 
 ---
 
-## 3. Modelo de domínio
+## 3. Backlog inicial
 
-```text
-Usuário  ──< Acesso >──  Lista            papel: dono | editor
-Lista    ──<            Item              nome normalizado único por lista
-Lista    ──<            Compra            sessão do Modo Mercado, com total e data
-Compra   ──< Registro >── Item            preço encontrado e quantidade levada
-```
+Quadro no GitHub Projects: <https://github.com/orgs/tanalistaimd/projects/2>. O backlog é o mesmo de DIM0524 — a diferença entre as disciplinas está nos artefatos de processo, não no produto.
 
-A unicidade de nome não é comparação de texto simples: `Compras do mês` e `compras do mês` são o mesmo, enquanto `Leite 200g` e `Leite 400g` não são. A chave é o nome normalizado — caixa baixa, acentos removidos, espaços colapsados —, o que torna a regra verificável tanto no cliente quanto no servidor, com o mesmo resultado.
-
-A **Compra** é a entidade que separa planejamento de execução. Sem ela, marcar um item comprado destrói o dado da lista e impede repetir a lista no mês seguinte. Com ela, a lista é um modelo reutilizável e cada ida ao mercado é um registro próprio — o que também dá o histórico sem custo adicional de modelagem.
-
----
-
-## 4. Backlog inicial
-
-Quadro no GitHub Projects: _[link]_. Estimativa em pontos de história, escala de Fibonacci.
-
-| Prio | História | Critérios de aceitação | Est. | Entrega |
+| Prio | História | Critérios de aceitação | Est. | Sprint |
 | --- | --- | --- | --- | --- |
-| P1 | Como usuário, quero criar uma lista para separar compras por ocasião | Nome obrigatório, com limite de caracteres; duplicidade bloqueada por nome normalizado | 3 | 1 |
-| P1 | Como usuário, quero ver minhas listas com o progresso para saber o que falta | Nome, número de itens, comprados sobre total, ordenadas por atualização | 3 | 1 |
-| P1 | Como usuário, quero adicionar itens com quantidade, unidade e categoria para planejar | Só o nome é obrigatório; quantidade positiva quando informada; unidade e categoria opcionais | 5 | 1 |
-| P1 | Como usuário, quero ser impedido de repetir um produto na mesma lista | Bloqueio por nome normalizado; variações como `Leite 200g` e `Leite 400g` aceitas | 3 | 1 |
-| P1 | Como usuário, quero editar e remover itens para corrigir a lista | Edição de todos os campos; remoção com desfazer | 2 | 1 |
-| P1 | Como usuário, quero renomear e excluir uma lista | Exclusão remove os itens associados, com confirmação | 2 | 1 |
-| P1 | Como usuário, quero ativar o Modo Mercado para executar a compra | Estado da lista muda; interface passa a priorizar leitura e toque grandes | 5 | 2 |
-| P1 | Como usuário, quero marcar item comprado e informar o preço encontrado | Subtotal por item; total soma apenas comprados; edição em uma tela só | 5 | 2 |
-| P1 | Como usuário, quero acompanhar o total do carrinho para não estourar no caixa | Total sempre visível, atualizado a cada marcação | 3 | 2 |
-| P2 | Como usuário, quero que alteração estrutural peça confirmação no Modo Mercado | Renomear lista, adicionar e remover item exigem confirmação; preço e quantidade não | 3 | 2 |
-| P1 | Como usuário, quero entrar na minha conta para usar minhas listas em outro aparelho | Cadastro e login pela API; token em armazenamento seguro do sistema | | 3 |
-| P1 | Como usuário, quero usar o aplicativo sem sinal dentro do mercado | Leitura sempre local; escritas em fila; indicador visível de pendência | | 3 |
-| P1 | Como usuário, quero que a compra suba sozinha quando o sinal voltar | Sincronização automática; política de conflito declarada em `docs/offline.md` | | 3 |
-| P2 | Como usuário, quero compartilhar uma lista com quem mora comigo | Convite por e-mail da conta; papel de editor; alterações dos dois aparecem após sincronizar | | 3 |
-| P2 | Como usuário, quero ver o histórico de compras para lembrar quanto gastei | Compras finalizadas com data, lista de origem e total | | 3 |
-| P2 | Como usuário, quero adicionar item lendo o código de barras para não digitar | Câmera resolve o código; caminho manual permanece disponível | | final |
-| P3 | Como usuário, quero compartilhar a lista com alguém que não usa o app | Exportação pelo seletor do sistema | | final |
+| P1 | Como usuário, quero criar uma lista para separar compras por ocasião | Nome obrigatório; duplicidade bloqueada por nome normalizado | 3 | 1 |
+| P1 | Como usuário, quero ver minhas listas com o progresso para saber o que falta | Comprados sobre total; ordenadas por atualização | 3 | 1 |
+| P1 | Como usuário, quero adicionar itens com quantidade, unidade e categoria | Só o nome é obrigatório; quantidade positiva quando informada | 5 | 1 |
+| P1 | Como usuário, quero ser impedido de repetir um produto na mesma lista | Nome normalizado; `Leite 200g` e `Leite 400g` seguem distintos | 3 | 1 |
+| P1 | Como usuário, quero editar e remover itens para corrigir a lista | Todos os campos editáveis; remoção com desfazer | 2 | 1 |
+| P1 | Como usuário, quero renomear e excluir uma lista | Exclusão leva os itens junto, com confirmação | 2 | 1 |
+| P1 | Como usuário, quero ativar o Modo Mercado para executar a compra | Interface passa a priorizar leitura e toque grandes | 5 | 2 |
+| P1 | Como usuário, quero marcar item comprado e informar o preço encontrado | Subtotal por item; total soma apenas comprados | 5 | 2 |
+| P1 | Como usuário, quero acompanhar o total do carrinho para não estourar no caixa | Sempre visível, atualizado a cada marcação | 3 | 2 |
+| P2 | Como usuário, quero que alteração estrutural peça confirmação no Modo Mercado | Renomear, adicionar e remover exigem confirmação; preço e quantidade não | 3 | 2 |
 
-P1 é essencial ao MVP, P2 é importante, P3 é desejável.
+As outras sete histórias — conta de usuário, uso offline, sincronização ao reconectar, lista compartilhada, histórico de compras, leitura de código de barras e exportação — estão no quadro, priorizadas e alocadas à Sprint 3 e à entrega final. São **17 histórias no total, todas priorizadas, 10 estimadas**. P1 é essencial ao MVP, P2 é importante, P3 é desejável.
 
 ---
 
-## 5. Plataforma-alvo
+## 4. Stack tecnológico
 
-**Android**, com **desktop** como alvo secundário configurado no projeto.
+Kotlin Multiplatform com Compose Multiplatform, alvos Android e desktop; SQLDelight para persistência local; Ktor Client para rede; Koin para injeção de dependências; GitHub Actions para integração contínua; ktlint e detekt como análise estática; `kotlin.test` e Turbine para testes. O backend é a API do próprio grupo em DIM0547, em monorepo separado. A justificativa de cada escolha está em [`dim0524/proposta.md`](../dim0524/proposta.md) e em [`decisoes/`](../decisoes/), já que decorrem das características do produto.
 
-Justificativa a partir do produto e do público: o momento que define o TáNaLista é o corredor do mercado, com uma mão no carrinho e sinal ruim. Isso é um aparelho no bolso, não um navegador. O público faz a compra com Android de faixa intermediária, e a equipe tem aparelhos Android físicos, o que permite testar em campo o cenário real — inclusive com o modo avião ligado — sem depender de emulador.
-
-O alvo desktop cobre o outro momento do produto, o planejamento em casa, onde digitar uma lista de trinta itens no teclado é mais rápido, e dá um ciclo de edição e visualização rápido durante o desenvolvimento. Ele também é a base da intenção de concorrer ao bônus de entrega multiplataforma, com adaptação de layout para janela larga.
-
-**Descartado:** iOS como alvo prioritário, porque nenhum integrante possui iPhone ou Mac e a entrega ficaria restrita ao simulador, longe do público real. **Descartado:** web como alvo prioritário, porque o bloco final exige câmera, armazenamento seguro e publicação em canal de distribuição.
+O que importa **nesta** disciplina é que a stack torna as práticas de processo mensuráveis: análise estática e testes de domínio rodam sem emulador, o que viabiliza o portão de qualidade no pipeline desde a Sprint 1; o GitHub Actions fornece frequência de implantação e tempo de espera para as métricas DORA da Sprint 2; e a dependência entre dois repositórios, com o backend concentrado em um integrante, cria uma fila de espera real — objeto do VSM da Sprint 3.
 
 ---
 
-## 6. Backend
+## 5. Acordo de processo
 
-**Opção C — API própria de Web II**, desenvolvida por Vinicius, integrante da equipe, em DIM0547.
+### Composição da equipe
 
-Justificativa a partir do produto: as regras que sustentam o TáNaLista são regras de servidor, não de gaveta de dados. A unicidade por nome normalizado precisa valer entre dois aparelhos que editaram a mesma lista offline; o compartilhamento exige autorização por recurso, e não por tabela; e o fechamento de uma Compra é uma transação que precisa resolver a marcação concorrente de dois aparelhos no mesmo corredor. Controlar o backend permite implementar a normalização, a restrição de unicidade e a idempotência do registro de compra do lado do servidor, com o mesmo algoritmo do cliente. Além disso, a opção C é a única que dá direito ao bônus de integração entre disciplinas.
+Os três cursam DIM0510 e DIM0524; Vinicius cursa também DIM0547, onde o backend do mesmo produto é avaliado. A equipe é uma só aqui: Vinicius não é fornecedor externo de uma API, ele puxa item do aplicativo como qualquer outro, e o backend é trabalho **adicional** dele.
 
-**Descartado:** Supabase, porque o grupo passaria a modelar a regra de negócio dentro dos limites do que o serviço oferece, e porque abriria mão do bônus de integração tendo um integrante cursando DIM0547. **Descartado:** Firebase, porque o modelo de consulta do Firestore obrigaria a desnormalizar o compartilhamento e não oferece restrição de unicidade transacional, que é o mecanismo da regra de item duplicado. **Descartado:** apenas local com APIs públicas, porque a lista compartilhada da casa é colaborativa por definição e a Sprint 3 exige consumo de API real.
+Daí duas regras que sustentam o resto. **O backend não desconta da participação aqui** — nenhuma sprint fecha com Vinicius sem PR integrado neste repositório, e o planejamento reserva capacidade menor para ele por isso. E **o repositório do backend não é território privado** — Thallys e Ivis abrem issue, revisam PR e programam em par lá, para que o contrato não dependa de uma cabeça só.
 
-**Contrato e desacoplamento.** O contrato precede a implementação dos dois lados e vive em `docs/contrato-api.md`, espelhando o OpenAPI do monorepo. A camada de dados do aplicativo é uma interface no domínio, com duas implementações: a de rede, com Ktor Client, e uma local que serve de implementação falsa. O aplicativo compila, roda e é demonstrável com a segunda enquanto o endpoint correspondente não existe — o risco de acoplar dois cronogramas de disciplina é real, e essa é a mitigação.
+### Apoio ao backend
 
-**Persistência local: SQLDelight.** O SQL é escrito à mão e verificado em tempo de compilação, o que casa com um domínio que já depende de consulta — total do carrinho, progresso da lista, unicidade normalizada — e evita descobrir erro de consulta em execução, no meio do mercado. Funciona em `commonMain` para Android e desktop com a mesma configuração, e o esquema versionado com migração é exigido na Sprint 3. **Descartado:** Room, cujo modelo de anotações é mais familiar, mas cujo suporte multiplataforma é mais recente e adiciona atrito de processamento de anotações no alvo desktop.
+Thallys e Ivis contribuem no monorepo de Web II **com homologação do docente**, registrada aqui e no README de lá. Como aquela disciplina avalia Vinicius individualmente, o apoio segue três regras, para ser legível a quem avalia:
+
+1. **Autoria explícita** — trabalho em par com `Co-authored-by:` no commit, conforme AVALIACAO.md §3.3.
+2. **Vinicius autora o PR e responde pela decisão** — o apoio é mão de obra e discussão, não terceirização: todo arquivo de lá continua sendo algo que ele explica sob arguição.
+3. **Escopo restrito** a contrato, DTOs, testes contra o contrato e dados de teste — não às decisões de arquitetura que DIM0547 avalia como competência dele.
+
+Esse apoio consome capacidade que não apareceria no quadro daqui, e trabalho invisível distorce velocidade e VSM. Por isso entra no quadro como Tarefa com a etiqueta `apoio-backend`: **não** conta como valor entregue nem entra na velocidade, mas ocupa WIP e é somado no fechamento — a Sprint 3 vai perguntar para onde foi o tempo da equipe, e a resposta precisa incluir essas horas.
+
+### Cadência e cerimônias
+
+A sprint da equipe coincide com a da disciplina: planejamento na segunda que abre, fechamento na sexta da entrega, com uma sincronização no meio.
+
+| Cerimônia | Quando | Duração | Saída |
+| --- | --- | --- | --- |
+| Planejamento | Início da sprint | 60 min | Itens no Sprint Backlog, com estimativa e capacidade por pessoa |
+| Sincronização | Semanal | 20 min | Impedimentos como issue; estado de cada endpoint atualizado no contrato |
+| Revisão | Sexta da entrega | 30 min | Incremento demonstrado e gravado |
+| Retrospectiva | Sexta da entrega | 30 min | Uma ação de melhoria, como issue com responsável |
+
+Todas com os três integrantes. **Retrospectiva sem ação registrada não conta como realizada** — a ação vira item do quadro, para que o efeito seja confrontado com dado na sprint seguinte. A sincronização tem pauta fixa de um item: que endpoints saíram do contrato para a implementação, e que histórias isso desbloqueia. É a única reunião que não pode virar mensagem.
+
+### Papéis
+
+Sem especialização por camada: os três tocam interface, dados e pipeline, para que nenhum item fique bloqueado na ausência de um.
+
+| Papel | Sprint 0 | Rotatividade |
+| --- | --- | --- |
+| Product Owner | Thallys | Rodízio a cada sprint |
+| Scrum Master | Ivis | Rodízio a cada sprint |
+| Mantenedor do pipeline e das métricas | Vinicius | Rodízio a cada sprint |
+| Guardião do contrato da API | Vinicius | **Fixo no semestre** |
+| Revisor de código | Rodízio entre os outros dois | Um PR nunca é revisado pelo autor |
+| Condução da apresentação e redação | Alterna | A cada sprint |
+
+Os três primeiros giram para que cada um exerça todos ao longo das quatro sprints. O contrato é a única atribuição fixa, porque quem implementa o backend é quem sabe o que ele pode prometer — e disso decorre que **mudança de contrato combinada em conversa não existe**: só vale entrando em `docs/contrato-api.md` por PR, revisado por quem não é o guardião, com a issue vinculada.
+
+O rodízio de revisão importa por um motivo concreto: com três pessoas, é fácil um par se formar e o terceiro revisar todo o resto. A ordem é registrada no planejamento, e a sincronização confere se cada um já revisou PR de cada um dos outros dois.
+
+### Definição de Pronto
+
+Um item sai de "Em revisão" quando **todas** valem:
+
+1. Integrado em `main` por pull request vinculado à issue
+2. Revisado e aprovado por outro integrante, seguindo o rodízio, com ao menos um comentário substantivo
+3. `ktlintCheck` e `detekt` limpos no GitHub Actions
+4. Testes automatizados do item escritos e verdes no CI
+5. Critérios de aceitação verificados manualmente no dispositivo
+6. Documentação afetada atualizada no mesmo PR
+7. Se consome a API: endpoint no contrato e teste contra a implementação falsa, de modo que o item seja demonstrável com o backend fora do ar
+
+Nenhuma condição admite exceção por prazo. Item que não cumpre volta para "Em progresso".
+
+### Fluxo do quadro e limites de trabalho em curso
+
+| Coluna | O que autoriza entrar | WIP |
+| --- | --- | --- |
+| Backlog | Priorizado pelo PO | — |
+| Sprint Backlog | Comprometido no planejamento | — |
+| Em progresso | Alguém assumiu o item | **3** |
+| Em revisão | PR aberto e CI verde | **2** |
+| Pronto | Definição de Pronto cumprida | — |
+
+Três em progresso é um item por pessoa. O limite de revisão é deliberadamente menor: deixar a fila crescer até três, com três pessoas, significa que ninguém está revisando. Com o limite atingido, revisar o PR do colega tem prioridade sobre iniciar item novo.
+
+A etiqueta `aguardando-contrato` marca item que depende de endpoint indisponível. Ele **não** ocupa vaga de WIP, porque não há trabalho em curso nele, e o tempo etiquetado é medido — é a medida direta de espera entre os dois repositórios no VSM da Sprint 3.
+
+A etiqueta também dispara uma ação: **dois itens simultâneos em `aguardando-contrato` autorizam quem estiver livre a puxar `apoio-backend` em vez de iniciar história nova**. É atacar o gargalo em vez de acumular estoque na frente dele, e só é possível porque o apoio ao monorepo está homologado. Sem essa válvula, a equipe responderia à espera abrindo mais frentes no app — o comportamento que infla o trabalho em curso e alonga o lead time de tudo. A hipótese que a Sprint 3 vai confirmar ou derrubar com dado é que o gargalo não está no app nem na API, mas na disponibilidade de uma pessoa para os dois.
+
+### Ferramentas
+
+| Uso | Ferramenta |
+| --- | --- |
+| Código e revisão | GitHub — dois repositórios, vinculados nos READMEs |
+| Quadro e backlog | GitHub Projects |
+| Contrato entre app e API | `docs/contrato-api.md`, espelhando o OpenAPI do monorepo |
+| Automação e métricas | GitHub Actions |
+| Conversa do dia a dia | WhatsApp |
+| Decisões técnicas | `docs/decisoes/` — um registro curto por decisão |
+| Uso de IA | `docs/uso-de-ia.md`, atualizado durante a sprint |
+
+Decisão tomada em conversa e não registrada é tratada como não tomada.
+
+### Riscos identificados
+
+| Risco | Efeito | Mitigação |
+| --- | --- | --- |
+| Cronogramas de duas disciplinas acoplados | App bloqueado esperando endpoint | Contrato antes da implementação; implementação falsa; item bloqueado sai do WIP e é medido |
+| Vinicius acumula o backend com as sprints daqui | Sobrecarga e queda de participação neste repositório | Capacidade menor reservada a ele; nenhuma sprint fecha sem PR dele aqui; apoio homologado como `apoio-backend` |
+| Apoio ao monorepo apagar a autoria dele em DIM0547 | Avaliação individual prejudicada | `Co-authored-by:` obrigatório; PR sempre autorado por ele; escopo restrito |
+| Escopo do Modo Mercado crescer | Sprint 2 estoura | Modo Mercado fatiado em quatro histórias entregáveis separadamente |
+| Conflito de sincronização mal resolvido | Perda de marcação de compra | Política de conflito escrita antes do código; registro de compra idempotente |
+| Concentração de commits na véspera | Componente B penalizado | Sincronização semanal confere movimentação do quadro; item parado há mais de uma semana é discutido |
 
 ---
 
-## 7. Equipe
+## 6. Equipe
 
 | Nome | Matrícula | Conta GitHub | Papel |
 | --- | --- | --- | --- |
 | Thallys | 20240011552 | thallystorres | Developer · Product Owner na Sprint 0 |
 | Ivis | 20220028454 | ivixs | Developer · Scrum Master na Sprint 0 |
-| Vinicius | 20230051760 | vbarbosadev | Developer · guardião do contrato da API · responsável pelo backend em DIM0547 |
+| Vinicius | 20230051760 | vbarbosadev | Developer · mantenedor do pipeline na Sprint 0 · guardião do contrato da API |
 
-Os três integrantes cursam DIM0524 e contribuem com o aplicativo. Vinicius cursa também DIM0547 e responde sozinho pelo backend naquela disciplina.
+Os três cursam DIM0510 e DIM0524. Vinicius cursa também DIM0547, onde responde pelo backend do mesmo produto.
 
 ---
 
-## 8. Coorte e integração
+## 7. Coorte e integração
 
 **Coorte de apresentação:** B — online
 
-**Intenção de entrega multiplataforma:** Android e desktop, com adaptação de interface para janela larga, a partir da Sprint 1.
+**Quadro no GitHub Projects:** <https://github.com/orgs/tanalistaimd/projects/2>
 
-**Integração entre disciplinas:** o aplicativo consome a API do próprio grupo em **DIM0547 — Desenvolvimento de Sistemas Web II**, e o mesmo produto é objeto de estudo em **DIM0510 — Processos de Software**, com entregáveis distintos. Aqui o objeto avaliado é o aplicativo; em DIM0547, o backend, os contratos e a infraestrutura; em DIM0510, o processo. Repositórios vinculados nos READMEs, conforme AVALIACAO.md §5.
+**Integração entre disciplinas:** o mesmo produto é desenvolvido em **DIM0524 — Sistemas para Dispositivos Móveis**, pela equipe inteira, e em **DIM0547 — Desenvolvimento de Sistemas Web II**, por Vinicius. Os entregáveis são distintos: lá o objeto avaliado é o aplicativo e o backend; aqui, o processo — acordo de processo, métricas de fluxo, DORA, VSM, retrospectivas e relatório final —, artefatos que existem apenas nesta disciplina. Repositórios vinculados nos READMEs.
