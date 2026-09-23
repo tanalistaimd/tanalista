@@ -17,20 +17,21 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 /**
  * Tela responsável pelo formulário de criação de uma nova lista de compras.
  *
- * O estado da tela é elevado: este componente não armazena o nome digitado
- * internamente. Ele apenas recebe os dados atuais e informa os eventos
- * de alteração e criação para o componente que o utiliza.
+ * O estado é elevado: a tela apenas recebe os dados atuais e comunica
+ * as ações do usuário ao componente responsável pelo estado.
  *
  * @param nome Nome atualmente digitado no formulário.
- * @param erro Mensagem de erro exibida no campo. Quando nula, não há erro.
- * @param onNomeChange Evento chamado sempre que o usuário altera o nome.
- * @param onCriar Evento chamado quando o usuário pressiona o botão de criação.
- * @param modifier Modificador opcional aplicado ao layout principal da tela.
+ * @param erro Mensagem de erro de validação ou `null` quando não há erro.
+ * @param mensagemSucesso Mensagem exibida após uma criação bem-sucedida.
+ * @param onNomeChange Evento disparado quando o nome é alterado.
+ * @param onCriar Evento disparado quando o usuário solicita a criação.
+ * @param modifier Modificador opcional aplicado à tela.
  */
 @Composable
 fun ListaFormScreen(
     nome: String,
     erro: String?,
+    mensagemSucesso: String?,
     onNomeChange: (String) -> Unit,
     onCriar: () -> Unit,
     modifier: Modifier = Modifier,
@@ -53,6 +54,9 @@ fun ListaFormScreen(
             value = nome,
             onValueChange = onNomeChange,
             modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text("Ex.: Compras do mês")
+            },
             label = {
                 Text("Nome da lista")
             },
@@ -65,7 +69,12 @@ fun ListaFormScreen(
             isError = erro != null,
             singleLine = true,
         )
-
+        if (mensagemSucesso != null) {
+            Text(
+                text = mensagemSucesso,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
         /*
          * O botão permanece desabilitado enquanto:
          * - o nome estiver vazio;
@@ -73,7 +82,7 @@ fun ListaFormScreen(
          */
         Button(
             onClick = onCriar,
-            enabled = erro == null && nome.isNotBlank(),
+            enabled = erro == null,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Criar lista")
@@ -94,6 +103,7 @@ private fun ListaFormScreenPreview() {
         ListaFormScreen(
             nome = "Compras do mês",
             erro = null,
+            mensagemSucesso = null,
             onNomeChange = {},
             onCriar = {},
         )

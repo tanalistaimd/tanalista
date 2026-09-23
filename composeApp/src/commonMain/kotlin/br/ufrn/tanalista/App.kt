@@ -27,6 +27,12 @@ fun App() {
     // Listas criadas durante a execução atual do aplicativo.
     var listas by remember { mutableStateOf(emptyList<ListaCompra>()) }
 
+    // Indica se o usuário já tentou enviar o formulário.
+    var tentouCriar by remember { mutableStateOf(false) }
+
+    // Mensagem exibida após a criação bem-sucedida de uma lista.
+    var mensagemSucesso by remember { mutableStateOf<String?>(null) }
+
     /*
      * Verifica duplicidade somente quando algum nome foi informado.
      * A comparação utiliza a normalização definida no validator.
@@ -44,7 +50,7 @@ fun App() {
      */
     val erro =
         when {
-            nome.isBlank() -> "O nome da lista é obrigatório."
+            tentouCriar && nome.isBlank() -> "O nome da lista é obrigatório."
             nomeDuplicado -> "Já existe uma lista com esse nome."
             else -> null
         }
@@ -53,25 +59,35 @@ fun App() {
         ListaFormScreen(
             nome = nome,
             erro = erro,
+            mensagemSucesso = mensagemSucesso,
             onNomeChange = { novoNome ->
                 nome = novoNome
+                tentouCriar = false
+                mensagemSucesso = null
             },
             onCriar = {
+                // Marca que o usuário tentou enviar o formulário.
+                tentouCriar = true
+
                 /*
-                 * Cria uma nova lista apenas com os dados necessários
-                 * para esta etapa do projeto.
+                 * A lista só é criada quando o nome é válido
+                 * e não existe outra lista equivalente.
                  */
-                val novaLista =
-                    ListaCompra(
-                        id = listas.size + 1,
-                        nome = nome.trim(),
-                    )
+                if (
+                    ListaCompraValidator.nomeEhValido(nome) &&
+                    !nomeDuplicado
+                ) {
+                    val novaLista =
+                        ListaCompra(
+                            id = listas.size + 1,
+                            nome = nome.trim(),
+                        )
 
-                // Cria uma nova coleção para que o Compose detecte a alteração.
-                listas = listas + novaLista
-
-                // Limpa o formulário após a criação.
-                nome = ""
+                    listas = listas + novaLista
+                    nome = ""
+                    tentouCriar = false
+                    mensagemSucesso = "Lista criada com sucesso."
+                }
             },
         )
     }
