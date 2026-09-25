@@ -3,6 +3,8 @@ package br.ufrn.tanalista.validation
 import br.ufrn.tanalista.model.ListaCompra
 
 object ListaCompraValidator {
+    const val LIMITE_NOME = 60
+
     /**
      * Normaliza o nome de uma lista para permitir comparações consistentes.
      *
@@ -35,7 +37,7 @@ object ListaCompraValidator {
      * @param nome Nome digitado no formulário.
      * @return `true` quando o nome possui conteúdo diferente de espaços.
      */
-    fun nomeEhValido(nome: String): Boolean = nome.isNotBlank()
+    fun nomeEhValido(nome: String): Boolean = nome.isNotBlank() && nome.trim().length <= LIMITE_NOME
 
     /**
      * Verifica se já existe uma lista com o mesmo nome normalizado.

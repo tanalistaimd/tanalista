@@ -6,9 +6,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import br.ufrn.tanalista.model.ListaComProgresso
 import br.ufrn.tanalista.model.ListaCompra
+import br.ufrn.tanalista.model.ProgressoCompra
+import br.ufrn.tanalista.model.ordenarPorAtualizacao
 import br.ufrn.tanalista.ui.lista.ListaFormScreen
 import br.ufrn.tanalista.validation.ListaCompraValidator
+import kotlin.time.Clock
 
 /**
  * Componente raiz da interface compartilhada do TáNaLista.
@@ -51,12 +55,20 @@ fun App() {
     val erro =
         when {
             tentouCriar && nome.isBlank() -> "O nome da lista é obrigatório."
+            nome.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
             nomeDuplicado -> "Já existe uma lista com esse nome."
             else -> null
         }
 
     MaterialTheme {
         ListaFormScreen(
+            listas =
+                ordenarPorAtualizacao(
+                    listas.map { lista ->
+                        ListaComProgresso(lista, ProgressoCompra(itensComprados = 0, totalItens = 0))
+                    },
+                ),
             nome = nome,
             erro = erro,
             mensagemSucesso = mensagemSucesso,
@@ -81,6 +93,7 @@ fun App() {
                         ListaCompra(
                             id = listas.size + 1,
                             nome = nome.trim(),
+                            atualizadaEm = Clock.System.now().toEpochMilliseconds(),
                         )
 
                     listas = listas + novaLista

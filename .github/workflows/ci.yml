@@ -40,6 +40,9 @@ jobs:
       - name: ktlint e detekt
         run: ./gradlew ktlintCheck detekt --no-daemon
 
+      - name: Testes do alvo desktop
+        run: ./gradlew :composeApp:desktopTest --no-daemon
+
       - name: Build do APK de depuração
         run: ./gradlew :composeApp:assembleDebug --no-daemon
 
