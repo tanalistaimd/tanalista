@@ -78,6 +78,13 @@ pertence a uma conta e pode ser compartilhada com outra.
 
 ## Como rodar
 
+**Estado atual do incremento:** é possível criar e visualizar listas durante a
+execução do aplicativo. Nomes são obrigatórios, limitados a 60 caracteres e únicos
+após normalização. As listas aparecem da mais recentemente atualizada para a mais
+antiga, com progresso `comprados/total`. Antes da implementação de itens e marcação
+de compra, as listas criadas aparecem com `0/0`; o preview da tela apresenta um
+exemplo com progresso preenchido. Os dados atuais permanecem apenas em memória.
+
 **Requisitos:** um JDK recente e o Android SDK. Não é preciso instalar o JDK 17 nem o
 Gradle — o `jvmToolchain(17)` e o `foojay-resolver-convention` baixam o toolchain, e o
 wrapper baixa o Gradle na versão que o CI usa.
@@ -89,6 +96,7 @@ cd tanalista
 ./gradlew :composeApp:assembleDebug   # APK em composeApp/build/outputs/apk/debug/
 ./gradlew :composeApp:run             # janela do desktop
 ./gradlew ktlintCheck detekt          # análise estática, a mesma que roda no CI
+./gradlew :composeApp:desktopTest      # testes automatizados do alvo desktop
 ```
 
 O caminho do Android SDK vai em `local.properties`, que é de cada máquina e não é

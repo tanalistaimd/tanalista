@@ -1,28 +1,107 @@
 package br.ufrn.tanalista
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import br.ufrn.tanalista.model.ListaComProgresso
+import br.ufrn.tanalista.model.ListaCompra
+import br.ufrn.tanalista.model.ProgressoCompra
+import br.ufrn.tanalista.model.ordenarPorAtualizacao
+import br.ufrn.tanalista.ui.lista.ListaFormScreen
+import br.ufrn.tanalista.validation.ListaCompraValidator
+import kotlin.time.Clock
 
+/**
+ * Componente raiz da interface compartilhada do TáNaLista.
+ *
+ * Nesta etapa da aplicação, mantém em memória o estado das listas
+ * e controla o formulário de criação de uma nova lista.
+ *
+ * Os dados permanecem em memória porque persistência e rede
+ * não fazem parte da Sprint 1.
+ */
 @Composable
 fun App() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.fillMaxSize().safeContentPadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text("TáNaLista", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "rodando em ${getPlatform().name}",
-                style = MaterialTheme.typography.bodyMedium,
+    // Nome atualmente digitado no formulário.
+    var nome by remember { mutableStateOf("") }
+
+    // Listas criadas durante a execução atual do aplicativo.
+    var listas by remember { mutableStateOf(emptyList<ListaCompra>()) }
+
+    // Indica se o usuário já tentou enviar o formulário.
+    var tentouCriar by remember { mutableStateOf(false) }
+
+    // Mensagem exibida após a criação bem-sucedida de uma lista.
+    var mensagemSucesso by remember { mutableStateOf<String?>(null) }
+
+    /*
+     * Verifica duplicidade somente quando algum nome foi informado.
+     * A comparação utiliza a normalização definida no validator.
+     */
+    val nomeDuplicado =
+        nome.isNotBlank() &&
+            ListaCompraValidator.nomeJaExiste(
+                nome = nome,
+                listasExistentes = listas,
             )
+
+    /*
+     * A validade do formulário é derivada do estado atual.
+     * Não é criado um segundo estado apenas para armazenar erros.
+     */
+    val erro =
+        when {
+            tentouCriar && nome.isBlank() -> "O nome da lista é obrigatório."
+            nome.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
+            nomeDuplicado -> "Já existe uma lista com esse nome."
+            else -> null
         }
+
+    MaterialTheme {
+        ListaFormScreen(
+            listas =
+                ordenarPorAtualizacao(
+                    listas.map { lista ->
+                        ListaComProgresso(lista, ProgressoCompra(itensComprados = 0, totalItens = 0))
+                    },
+                ),
+            nome = nome,
+            erro = erro,
+            mensagemSucesso = mensagemSucesso,
+            onNomeChange = { novoNome ->
+                nome = novoNome
+                tentouCriar = false
+                mensagemSucesso = null
+            },
+            onCriar = {
+                // Marca que o usuário tentou enviar o formulário.
+                tentouCriar = true
+
+                /*
+                 * A lista só é criada quando o nome é válido
+                 * e não existe outra lista equivalente.
+                 */
+                if (
+                    ListaCompraValidator.nomeEhValido(nome) &&
+                    !nomeDuplicado
+                ) {
+                    val novaLista =
+                        ListaCompra(
+                            id = listas.size + 1,
+                            nome = nome.trim(),
+                            atualizadaEm = Clock.System.now().toEpochMilliseconds(),
+                        )
+
+                    listas = listas + novaLista
+                    nome = ""
+                    tentouCriar = false
+                    mensagemSucesso = "Lista criada com sucesso."
+                }
+            },
+        )
     }
 }
