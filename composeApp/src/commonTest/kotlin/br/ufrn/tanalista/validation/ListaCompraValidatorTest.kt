@@ -35,6 +35,16 @@ class ListaCompraValidatorTest {
     }
 
     @Test
+    fun `nome pode ter exatamente 60 caracteres apos remover espacos externos`() {
+        assertTrue(ListaCompraValidator.nomeEhValido(" ${"a".repeat(60)} "))
+    }
+
+    @Test
+    fun `nome com mais de 60 caracteres deve ser invalido`() {
+        assertFalse(ListaCompraValidator.nomeEhValido("a".repeat(61)))
+    }
+
+    @Test
     fun `deve identificar lista duplicada pelo nome normalizado`() {
         val listasExistentes =
             listOf(

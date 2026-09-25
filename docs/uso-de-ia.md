@@ -52,3 +52,11 @@ código errado, foi de ação irreversível tomada rápido demais.
 ## Sprints seguintes
 
 Uma seção por sprint, no mesmo formato.
+
+## Sprint 1
+
+**Ferramenta:** OpenCode (GPT-6 Sol). **Quem usou:** Vinicius.
+
+| Tarefa | O que a ferramenta fez | Como foi verificado |
+| --- | --- | --- |
+| Issues #7 e #8 | Acrescentou limite de 60 caracteres ao nome, listagem ordenada por atualização, resumo de progresso separado da lista reutilizável e testes | `gradlew.bat :composeApp:desktopTest ktlintCheck detekt --no-daemon` passou; build e teste manual no Android dependem de SDK nesta máquina |
