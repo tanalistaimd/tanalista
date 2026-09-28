@@ -2,6 +2,7 @@ package br.ufrn.tanalista
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +43,12 @@ fun App() {
 
     // Lista aguardando confirmação de exclusão.
     var listaParaExcluir by remember { mutableStateOf<ListaCompra?>(null) }
+
+    // Lista atualmente selecionada para edição.
+    var listaParaEditar by remember { mutableStateOf<ListaCompra?>(null) }
+
+    // Nome temporário digitado durante a edição.
+    var nomeEditado by remember { mutableStateOf("") }
 
     /*
      * Verifica duplicidade somente quando algum nome foi informado.
@@ -109,13 +116,99 @@ fun App() {
                 }
             },
             onEditarLista = { lista ->
-                // Log temporário para verificar qual lista foi selecionada para edição.
-                println("[TaNaLista] Editar: ${lista.nome}")
+                listaParaEditar = lista
+                nomeEditado = lista.nome
             },
             onExcluirLista = { lista ->
                 listaParaExcluir = lista
             },
         )
+        listaParaEditar?.let { lista ->
+            val erroEdicao =
+                when {
+                    nomeEditado.isBlank() ->
+                        "O nome da lista é obrigatório."
+
+                    nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                        "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
+
+                    ListaCompraValidator.nomeJaExiste(
+                        nome = nomeEditado,
+                        listasExistentes =
+                            listas.filter { listaExistente ->
+                                listaExistente.id != lista.id
+                            },
+                    ) ->
+                        "Já existe uma lista com esse nome."
+
+                    else -> null
+                }
+
+            AlertDialog(
+                onDismissRequest = {
+                    listaParaEditar = null
+                    nomeEditado = ""
+                },
+                title = {
+                    Text("Editar nome da lista?")
+                },
+                text = {
+                    OutlinedTextField(
+                        value = nomeEditado,
+                        onValueChange = {
+                            nomeEditado = it
+                        },
+                        label = {
+                            Text("Nome da lista")
+                        },
+                        supportingText = {
+                            if (erroEdicao != null) {
+                                Text(erroEdicao)
+                            }
+                        },
+                        isError = erroEdicao != null,
+                        singleLine = true,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            listas =
+                                listas.map { listaExistente ->
+                                    if (listaExistente.id == lista.id) {
+                                        listaExistente.copy(
+                                            nome = nomeEditado.trim(),
+                                            atualizadaEm =
+                                                Clock.System
+                                                    .now()
+                                                    .toEpochMilliseconds(),
+                                        )
+                                    } else {
+                                        listaExistente
+                                    }
+                                }
+
+                            listaParaEditar = null
+                            nomeEditado = ""
+                            mensagemSucesso = "Lista editada com sucesso."
+                        },
+                        enabled = erroEdicao == null,
+                    ) {
+                        Text("Salvar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            listaParaEditar = null
+                            nomeEditado = ""
+                        },
+                    ) {
+                        Text("Cancelar")
+                    }
+                },
+            )
+        }
         listaParaExcluir?.let { lista ->
             AlertDialog(
                 onDismissRequest = {
