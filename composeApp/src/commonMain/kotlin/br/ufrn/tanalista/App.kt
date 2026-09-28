@@ -1,6 +1,9 @@
 package br.ufrn.tanalista
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +39,9 @@ fun App() {
 
     // Mensagem exibida após a criação bem-sucedida de uma lista.
     var mensagemSucesso by remember { mutableStateOf<String?>(null) }
+
+    // Lista aguardando confirmação de exclusão.
+    var listaParaExcluir by remember { mutableStateOf<ListaCompra?>(null) }
 
     /*
      * Verifica duplicidade somente quando algum nome foi informado.
@@ -91,7 +97,7 @@ fun App() {
                 ) {
                     val novaLista =
                         ListaCompra(
-                            id = listas.size + 1,
+                            id = (listas.maxOfOrNull { it.id } ?: 0) + 1,
                             nome = nome.trim(),
                             atualizadaEm = Clock.System.now().toEpochMilliseconds(),
                         )
@@ -102,6 +108,52 @@ fun App() {
                     mensagemSucesso = "Lista criada com sucesso."
                 }
             },
+            onEditarLista = { lista ->
+                // Log temporário para verificar qual lista foi selecionada para edição.
+                println("[TaNaLista] Editar: ${lista.nome}")
+            },
+            onExcluirLista = { lista ->
+                listaParaExcluir = lista
+            },
         )
+        listaParaExcluir?.let { lista ->
+            AlertDialog(
+                onDismissRequest = {
+                    listaParaExcluir = null
+                },
+                title = {
+                    Text("Excluir lista?")
+                },
+                text = {
+                    Text(
+                        "Tem certeza de que deseja excluir a lista \"${lista.nome}\"?",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            listas =
+                                listas.filterNot { listaExistente ->
+                                    listaExistente.id == lista.id
+                                }
+
+                            listaParaExcluir = null
+                            mensagemSucesso = "Lista excluída com sucesso."
+                        },
+                    ) {
+                        Text("Excluir")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            listaParaExcluir = null
+                        },
+                    ) {
+                        Text("Cancelar")
+                    }
+                },
+            )
+        }
     }
 }
