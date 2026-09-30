@@ -1,6 +1,10 @@
 package br.ufrn.tanalista
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +40,15 @@ fun App() {
 
     // Mensagem exibida após a criação bem-sucedida de uma lista.
     var mensagemSucesso by remember { mutableStateOf<String?>(null) }
+
+    // Lista aguardando confirmação de exclusão.
+    var listaParaExcluir by remember { mutableStateOf<ListaCompra?>(null) }
+
+    // Lista atualmente selecionada para edição.
+    var listaParaEditar by remember { mutableStateOf<ListaCompra?>(null) }
+
+    // Nome temporário digitado durante a edição.
+    var nomeEditado by remember { mutableStateOf("") }
 
     /*
      * Verifica duplicidade somente quando algum nome foi informado.
@@ -91,7 +104,7 @@ fun App() {
                 ) {
                     val novaLista =
                         ListaCompra(
-                            id = listas.size + 1,
+                            id = (listas.maxOfOrNull { it.id } ?: 0) + 1,
                             nome = nome.trim(),
                             atualizadaEm = Clock.System.now().toEpochMilliseconds(),
                         )
@@ -102,6 +115,138 @@ fun App() {
                     mensagemSucesso = "Lista criada com sucesso."
                 }
             },
+            onEditarLista = { lista ->
+                listaParaEditar = lista
+                nomeEditado = lista.nome
+            },
+            onExcluirLista = { lista ->
+                listaParaExcluir = lista
+            },
         )
+        listaParaEditar?.let { lista ->
+            val erroEdicao =
+                when {
+                    nomeEditado.isBlank() ->
+                        "O nome da lista é obrigatório."
+
+                    nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                        "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
+
+                    ListaCompraValidator.nomeJaExiste(
+                        nome = nomeEditado,
+                        listasExistentes =
+                            listas.filter { listaExistente ->
+                                listaExistente.id != lista.id
+                            },
+                    ) ->
+                        "Já existe uma lista com esse nome."
+
+                    else -> null
+                }
+
+            AlertDialog(
+                onDismissRequest = {
+                    listaParaEditar = null
+                    nomeEditado = ""
+                },
+                title = {
+                    Text("Editar nome da lista?")
+                },
+                text = {
+                    OutlinedTextField(
+                        value = nomeEditado,
+                        onValueChange = {
+                            nomeEditado = it
+                        },
+                        label = {
+                            Text("Nome da lista")
+                        },
+                        supportingText = {
+                            if (erroEdicao != null) {
+                                Text(erroEdicao)
+                            }
+                        },
+                        isError = erroEdicao != null,
+                        singleLine = true,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            listas =
+                                listas.map { listaExistente ->
+                                    if (listaExistente.id == lista.id) {
+                                        listaExistente.copy(
+                                            nome = nomeEditado.trim(),
+                                            atualizadaEm =
+                                                Clock.System
+                                                    .now()
+                                                    .toEpochMilliseconds(),
+                                        )
+                                    } else {
+                                        listaExistente
+                                    }
+                                }
+
+                            listaParaEditar = null
+                            nomeEditado = ""
+                            mensagemSucesso = "Lista editada com sucesso."
+                        },
+                        enabled = erroEdicao == null,
+                    ) {
+                        Text("Salvar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            listaParaEditar = null
+                            nomeEditado = ""
+                        },
+                    ) {
+                        Text("Cancelar")
+                    }
+                },
+            )
+        }
+        listaParaExcluir?.let { lista ->
+            AlertDialog(
+                onDismissRequest = {
+                    listaParaExcluir = null
+                },
+                title = {
+                    Text("Excluir lista?")
+                },
+                text = {
+                    Text(
+                        "Tem certeza de que deseja excluir a lista \"${lista.nome}\"?",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            listas =
+                                listas.filterNot { listaExistente ->
+                                    listaExistente.id == lista.id
+                                }
+
+                            listaParaExcluir = null
+                            mensagemSucesso = "Lista excluída com sucesso."
+                        },
+                    ) {
+                        Text("Excluir")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            listaParaExcluir = null
+                        },
+                    ) {
+                        Text("Cancelar")
+                    }
+                },
+            )
+        }
     }
 }
