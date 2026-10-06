@@ -2,6 +2,7 @@ package br.ufrn.tanalista.ui.lista
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * @param onNomeChange Evento disparado quando o nome é alterado.
  * @param onCriar Evento disparado quando o usuário solicita a criação.
  * @param modifier Modificador opcional aplicado à tela.
+ * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
+ * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
  */
 @Composable
 fun ListaFormScreen(
@@ -42,6 +46,8 @@ fun ListaFormScreen(
     mensagemSucesso: String?,
     onNomeChange: (String) -> Unit,
     onCriar: () -> Unit,
+    onEditarLista: (ListaCompra) -> Unit,
+    onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -97,13 +103,28 @@ fun ListaFormScreen(
         }
 
         Text("Minhas listas", style = MaterialTheme.typography.titleLarge)
-        ListaResumoContent(listas, Modifier.weight(1f))
+        ListaResumoContent(
+            listas = listas,
+            onEditarLista = onEditarLista,
+            onExcluirLista = onExcluirLista,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
+/**
+ * Exibe as listas de compras criadas pelo usuário.
+ *
+ * @param listas Listas que serão apresentadas na tela.
+ * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
+ * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
+ * @param modifier Modificador opcional aplicado à listagem.
+ */
 @Composable
 private fun ListaResumoContent(
     listas: List<ListaComProgresso>,
+    onEditarLista: (ListaCompra) -> Unit,
+    onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (listas.isEmpty()) {
@@ -112,12 +133,45 @@ private fun ListaResumoContent(
         LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(listas, key = { it.lista.id }) { resumo ->
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(resumo.lista.nome, style = MaterialTheme.typography.titleMedium)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                    ) {
                         Text(
-                            "${resumo.progresso.itensComprados}/${resumo.progresso.totalItens} itens comprados",
+                            text = resumo.lista.nome,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+
+                        Text(
+                            text = "${resumo.progresso.itensComprados}/${resumo.progresso.totalItens} itens comprados",
                             style = MaterialTheme.typography.bodyMedium,
                         )
+
+                        /*
+                         * Ações disponíveis para cada lista.
+                         *
+                         * A tela não realiza diretamente a edição ou exclusão:
+                         * apenas comunica a ação ao componente responsável pelo estado.
+                         */
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    onEditarLista(resumo.lista)
+                                },
+                            ) {
+                                Text("Editar")
+                            }
+
+                            TextButton(
+                                onClick = {
+                                    onExcluirLista(resumo.lista)
+                                },
+                            ) {
+                                Text("Excluir")
+                            }
+                        }
                     }
                 }
             }
@@ -140,7 +194,10 @@ private fun ListaFormScreenPreview() {
                 listOf(
                     ListaComProgresso(
                         ListaCompra(1, "Compras do mês"),
-                        ProgressoCompra(itensComprados = 2, totalItens = 5),
+                        ProgressoCompra(
+                            itensComprados = 2,
+                            totalItens = 5,
+                        ),
                     ),
                 ),
             nome = "Compras do mês",
@@ -148,6 +205,8 @@ private fun ListaFormScreenPreview() {
             mensagemSucesso = null,
             onNomeChange = {},
             onCriar = {},
+            onEditarLista = {},
+            onExcluirLista = {},
         )
     }
 }
