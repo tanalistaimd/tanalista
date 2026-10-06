@@ -21,232 +21,356 @@ import kotlin.time.Clock
 /**
  * Componente raiz da interface compartilhada do TáNaLista.
  *
- * Nesta etapa da aplicação, mantém em memória o estado das listas
- * e controla o formulário de criação de uma nova lista.
- *
- * Os dados permanecem em memória porque persistência e rede
- * não fazem parte da Sprint 1.
+ * Mantém o estado das listas em memória durante a Sprint 1
+ * e conecta a interface às ações de criação, edição e exclusão.
  */
 @Composable
 fun App() {
-    // Nome atualmente digitado no formulário.
-    var nome by remember { mutableStateOf("") }
-
-    // Listas criadas durante a execução atual do aplicativo.
-    var listas by remember { mutableStateOf(emptyList<ListaCompra>()) }
-
-    // Indica se o usuário já tentou enviar o formulário.
-    var tentouCriar by remember { mutableStateOf(false) }
-
-    // Mensagem exibida após a criação bem-sucedida de uma lista.
-    var mensagemSucesso by remember { mutableStateOf<String?>(null) }
-
-    // Lista aguardando confirmação de exclusão.
-    var listaParaExcluir by remember { mutableStateOf<ListaCompra?>(null) }
-
-    // Lista atualmente selecionada para edição.
-    var listaParaEditar by remember { mutableStateOf<ListaCompra?>(null) }
-
-    // Nome temporário digitado durante a edição.
-    var nomeEditado by remember { mutableStateOf("") }
-
-    /*
-     * Verifica duplicidade somente quando algum nome foi informado.
-     * A comparação utiliza a normalização definida no validator.
-     */
-    val nomeDuplicado =
-        nome.isNotBlank() &&
-            ListaCompraValidator.nomeJaExiste(
-                nome = nome,
-                listasExistentes = listas,
-            )
-
-    /*
-     * A validade do formulário é derivada do estado atual.
-     * Não é criado um segundo estado apenas para armazenar erros.
-     */
-    val erro =
-        when {
-            tentouCriar && nome.isBlank() -> "O nome da lista é obrigatório."
-            nome.trim().length > ListaCompraValidator.LIMITE_NOME ->
-                "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
-            nomeDuplicado -> "Já existe uma lista com esse nome."
-            else -> null
-        }
+    val state = remember { ListaAppState() }
 
     MaterialTheme {
         ListaFormScreen(
-            listas =
-                ordenarPorAtualizacao(
-                    listas.map { lista ->
-                        ListaComProgresso(lista, ProgressoCompra(itensComprados = 0, totalItens = 0))
-                    },
-                ),
-            nome = nome,
-            erro = erro,
-            mensagemSucesso = mensagemSucesso,
-            onNomeChange = { novoNome ->
-                nome = novoNome
-                tentouCriar = false
-                mensagemSucesso = null
-            },
-            onCriar = {
-                // Marca que o usuário tentou enviar o formulário.
-                tentouCriar = true
-
-                /*
-                 * A lista só é criada quando o nome é válido
-                 * e não existe outra lista equivalente.
-                 */
-                if (
-                    ListaCompraValidator.nomeEhValido(nome) &&
-                    !nomeDuplicado
-                ) {
-                    val novaLista =
-                        ListaCompra(
-                            id = (listas.maxOfOrNull { it.id } ?: 0) + 1,
-                            nome = nome.trim(),
-                            atualizadaEm = Clock.System.now().toEpochMilliseconds(),
-                        )
-
-                    listas = listas + novaLista
-                    nome = ""
-                    tentouCriar = false
-                    mensagemSucesso = "Lista criada com sucesso."
-                }
-            },
-            onEditarLista = { lista ->
-                listaParaEditar = lista
-                nomeEditado = lista.nome
-            },
-            onExcluirLista = { lista ->
-                listaParaExcluir = lista
-            },
+            listas = state.listasComProgresso,
+            nome = state.nome,
+            erro = state.erroCriacao,
+            mensagemSucesso = state.mensagemSucesso,
+            onNomeChange = state::alterarNome,
+            onCriar = state::criarLista,
+            onEditarLista = state::iniciarEdicao,
+            onExcluirLista = state::solicitarExclusao,
         )
-        listaParaEditar?.let { lista ->
-            val erroEdicao =
-                when {
-                    nomeEditado.isBlank() ->
-                        "O nome da lista é obrigatório."
 
-                    nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
-                        "O nome deve ter no máximo ${ListaCompraValidator.LIMITE_NOME} caracteres."
-
-                    ListaCompraValidator.nomeJaExiste(
-                        nome = nomeEditado,
-                        listasExistentes =
-                            listas.filter { listaExistente ->
-                                listaExistente.id != lista.id
-                            },
-                    ) ->
-                        "Já existe uma lista com esse nome."
-
-                    else -> null
-                }
-
-            AlertDialog(
-                onDismissRequest = {
-                    listaParaEditar = null
-                    nomeEditado = ""
+        state.listaParaEditar?.let { lista ->
+            DialogoEditarLista(
+                nomeEditado = state.nomeEditado,
+                erro = state.erroEdicao(lista),
+                onNomeChange = state::alterarNomeEditado,
+                onSalvar = {
+                    state.salvarEdicao(lista)
                 },
-                title = {
-                    Text("Editar nome da lista?")
-                },
-                text = {
-                    OutlinedTextField(
-                        value = nomeEditado,
-                        onValueChange = {
-                            nomeEditado = it
-                        },
-                        label = {
-                            Text("Nome da lista")
-                        },
-                        supportingText = {
-                            if (erroEdicao != null) {
-                                Text(erroEdicao)
-                            }
-                        },
-                        isError = erroEdicao != null,
-                        singleLine = true,
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            listas =
-                                listas.map { listaExistente ->
-                                    if (listaExistente.id == lista.id) {
-                                        listaExistente.copy(
-                                            nome = nomeEditado.trim(),
-                                            atualizadaEm =
-                                                Clock.System
-                                                    .now()
-                                                    .toEpochMilliseconds(),
-                                        )
-                                    } else {
-                                        listaExistente
-                                    }
-                                }
-
-                            listaParaEditar = null
-                            nomeEditado = ""
-                            mensagemSucesso = "Lista editada com sucesso."
-                        },
-                        enabled = erroEdicao == null,
-                    ) {
-                        Text("Salvar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            listaParaEditar = null
-                            nomeEditado = ""
-                        },
-                    ) {
-                        Text("Cancelar")
-                    }
-                },
+                onCancelar = state::cancelarEdicao,
             )
         }
-        listaParaExcluir?.let { lista ->
-            AlertDialog(
-                onDismissRequest = {
-                    listaParaExcluir = null
-                },
-                title = {
-                    Text("Excluir lista?")
-                },
-                text = {
-                    Text(
-                        "Tem certeza de que deseja excluir a lista \"${lista.nome}\"?",
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            listas =
-                                listas.filterNot { listaExistente ->
-                                    listaExistente.id == lista.id
-                                }
 
-                            listaParaExcluir = null
-                            mensagemSucesso = "Lista excluída com sucesso."
-                        },
-                    ) {
-                        Text("Excluir")
-                    }
+        state.listaParaExcluir?.let { lista ->
+            DialogoExcluirLista(
+                lista = lista,
+                onConfirmar = {
+                    state.confirmarExclusao(lista)
                 },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            listaParaExcluir = null
-                        },
-                    ) {
-                        Text("Cancelar")
-                    }
-                },
+                onCancelar = state::cancelarExclusao,
             )
         }
     }
+}
+
+/**
+ * Mantém e manipula o estado relacionado às listas de compras.
+ *
+ * Concentra as regras de criação, edição e exclusão para evitar
+ * que o componente principal acumule responsabilidades.
+ */
+private class ListaAppState {
+    var nome by mutableStateOf("")
+        private set
+
+    var listas by mutableStateOf(emptyList<ListaCompra>())
+        private set
+
+    var tentouCriar by mutableStateOf(false)
+        private set
+
+    var mensagemSucesso by mutableStateOf<String?>(null)
+        private set
+
+    var listaParaExcluir by mutableStateOf<ListaCompra?>(null)
+        private set
+
+    var listaParaEditar by mutableStateOf<ListaCompra?>(null)
+        private set
+
+    var nomeEditado by mutableStateOf("")
+        private set
+
+    /**
+     * Listas preparadas para exibição na interface.
+     */
+    val listasComProgresso: List<ListaComProgresso>
+        get() =
+            ordenarPorAtualizacao(
+                listas.map { lista ->
+                    ListaComProgresso(
+                        lista = lista,
+                        progresso =
+                            ProgressoCompra(
+                                itensComprados = 0,
+                                totalItens = 0,
+                            ),
+                    )
+                },
+            )
+
+    /**
+     * Verifica se o nome informado já pertence a outra lista.
+     */
+    private val nomeDuplicado: Boolean
+        get() =
+            nome.isNotBlank() &&
+                ListaCompraValidator.nomeJaExiste(
+                    nome = nome,
+                    listasExistentes = listas,
+                )
+
+    /**
+     * Retorna o erro atual do formulário de criação.
+     */
+    val erroCriacao: String?
+        get() =
+            when {
+                tentouCriar && nome.isBlank() ->
+                    "O nome da lista é obrigatório."
+
+                nome.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                    "O nome deve ter no máximo " +
+                        "${ListaCompraValidator.LIMITE_NOME} caracteres."
+
+                nomeDuplicado ->
+                    "Já existe uma lista com esse nome."
+
+                else -> null
+            }
+
+    /**
+     * Atualiza o nome digitado no formulário de criação.
+     */
+    fun alterarNome(novoNome: String) {
+        nome = novoNome
+        tentouCriar = false
+        mensagemSucesso = null
+    }
+
+    /**
+     * Cria uma nova lista quando os dados são válidos.
+     */
+    fun criarLista() {
+        tentouCriar = true
+
+        if (!ListaCompraValidator.nomeEhValido(nome) || nomeDuplicado) {
+            return
+        }
+
+        val novaLista =
+            ListaCompra(
+                id = (listas.maxOfOrNull { it.id } ?: 0) + 1,
+                nome = nome.trim(),
+                atualizadaEm =
+                    Clock.System
+                        .now()
+                        .toEpochMilliseconds(),
+            )
+
+        listas = listas + novaLista
+        nome = ""
+        tentouCriar = false
+        mensagemSucesso = "Lista criada com sucesso."
+    }
+
+    /**
+     * Inicia a edição da lista selecionada.
+     */
+    fun iniciarEdicao(lista: ListaCompra) {
+        listaParaEditar = lista
+        nomeEditado = lista.nome
+        mensagemSucesso = null
+    }
+
+    /**
+     * Atualiza o nome temporário usado durante a edição.
+     */
+    fun alterarNomeEditado(novoNome: String) {
+        nomeEditado = novoNome
+    }
+
+    /**
+     * Valida o nome informado durante a edição.
+     */
+    fun erroEdicao(lista: ListaCompra): String? =
+        when {
+            nomeEditado.isBlank() ->
+                "O nome da lista é obrigatório."
+
+            nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                "O nome deve ter no máximo " +
+                    "${ListaCompraValidator.LIMITE_NOME} caracteres."
+
+            ListaCompraValidator.nomeJaExiste(
+                nome = nomeEditado,
+                listasExistentes =
+                    listas.filter { listaExistente ->
+                        listaExistente.id != lista.id
+                    },
+            ) ->
+                "Já existe uma lista com esse nome."
+
+            else -> null
+        }
+
+    /**
+     * Salva a alteração realizada no nome da lista.
+     */
+    fun salvarEdicao(lista: ListaCompra) {
+        if (erroEdicao(lista) != null) {
+            return
+        }
+
+        listas =
+            listas.map { listaExistente ->
+                if (listaExistente.id == lista.id) {
+                    listaExistente.copy(
+                        nome = nomeEditado.trim(),
+                        atualizadaEm =
+                            Clock.System
+                                .now()
+                                .toEpochMilliseconds(),
+                    )
+                } else {
+                    listaExistente
+                }
+            }
+
+        cancelarEdicao()
+        mensagemSucesso = "Lista editada com sucesso."
+    }
+
+    /**
+     * Cancela a edição atualmente aberta.
+     */
+    fun cancelarEdicao() {
+        listaParaEditar = null
+        nomeEditado = ""
+    }
+
+    /**
+     * Seleciona uma lista para exclusão.
+     */
+    fun solicitarExclusao(lista: ListaCompra) {
+        listaParaExcluir = lista
+        mensagemSucesso = null
+    }
+
+    /**
+     * Exclui uma lista após confirmação do usuário.
+     */
+    fun confirmarExclusao(lista: ListaCompra) {
+        listas =
+            listas.filterNot { listaExistente ->
+                listaExistente.id == lista.id
+            }
+
+        cancelarExclusao()
+        mensagemSucesso = "Lista excluída com sucesso."
+    }
+
+    /**
+     * Cancela a exclusão atualmente aberta.
+     */
+    fun cancelarExclusao() {
+        listaParaExcluir = null
+    }
+}
+
+/**
+ * Diálogo responsável pela alteração do nome de uma lista.
+ *
+ * @param nomeEditado Nome atualmente informado pelo usuário.
+ * @param erro Mensagem de validação ou `null` quando não há erro.
+ * @param onNomeChange Evento disparado quando o nome é alterado.
+ * @param onSalvar Evento disparado ao confirmar a alteração.
+ * @param onCancelar Evento disparado ao cancelar a alteração.
+ */
+@Composable
+private fun DialogoEditarLista(
+    nomeEditado: String,
+    erro: String?,
+    onNomeChange: (String) -> Unit,
+    onSalvar: () -> Unit,
+    onCancelar: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        title = {
+            Text("Editar nome da lista?")
+        },
+        text = {
+            OutlinedTextField(
+                value = nomeEditado,
+                onValueChange = onNomeChange,
+                label = {
+                    Text("Nome da lista")
+                },
+                supportingText = {
+                    if (erro != null) {
+                        Text(erro)
+                    }
+                },
+                isError = erro != null,
+                singleLine = true,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onSalvar,
+                enabled = erro == null,
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onCancelar,
+            ) {
+                Text("Cancelar")
+            }
+        },
+    )
+}
+
+/**
+ * Diálogo responsável pela confirmação da exclusão de uma lista.
+ *
+ * @param lista Lista selecionada para exclusão.
+ * @param onConfirmar Evento disparado ao confirmar a exclusão.
+ * @param onCancelar Evento disparado ao cancelar a exclusão.
+ */
+@Composable
+private fun DialogoExcluirLista(
+    lista: ListaCompra,
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        title = {
+            Text("Excluir lista?")
+        },
+        text = {
+            Text(
+                "Tem certeza de que deseja excluir a lista \"${lista.nome}\"?",
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirmar,
+            ) {
+                Text("Excluir")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onCancelar,
+            ) {
+                Text("Cancelar")
+            }
+        },
+    )
 }
