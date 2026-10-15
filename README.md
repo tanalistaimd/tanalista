@@ -78,12 +78,22 @@ pertence a uma conta e pode ser compartilhada com outra.
 
 ## Como rodar
 
-**Estado atual do incremento:** é possível criar e visualizar listas durante a
-execução do aplicativo. Nomes são obrigatórios, limitados a 60 caracteres e únicos
-após normalização. As listas aparecem da mais recentemente atualizada para a mais
-antiga, com progresso `comprados/total`. Antes da implementação de itens e marcação
-de compra, as listas criadas aparecem com `0/0`; o preview da tela apresenta um
-exemplo com progresso preenchido. Os dados atuais permanecem apenas em memória.
+**Estado atual do incremento:** é possível criar, renomear, excluir e abrir listas
+para adicionar itens durante a execução do aplicativo. Nomes de listas são
+obrigatórios, limitados a 60 caracteres e únicos após normalização. As listas
+aparecem da mais recentemente atualizada para a mais antiga: criar, renomear ou
+adicionar um item atualiza essa ordem. Cada cartão mostra `comprados/total`, com o
+total real de itens daquela lista (`0/0` quando vazia, `0/3` com três itens).
+O número de comprados permanece zero até a implementação da marcação da issue #14;
+o preview demonstra um exemplo com progresso preenchido. Os dados permanecem
+apenas em memória e são perdidos ao encerrar o aplicativo.
+
+**Verificação manual da #8 no Android:** crie duas listas, abra a mais antiga e
+adicione dois itens. Ao voltar, ela deve aparecer primeiro com `0/2`, e a outra
+deve continuar com `0/0`. Tente adicionar um item duplicado ou com quantidade
+inválida: o formulário deve impedir a inclusão, sem mudar o contador. Renomeie a
+outra lista e confira que ela passa para o início. Exclua uma lista com itens,
+crie outra e confira que os itens excluídos não reaparecem.
 
 **Requisitos:** um JDK recente e o Android SDK. Não é preciso instalar o JDK 17 nem o
 Gradle — o `jvmToolchain(17)` e o `foojay-resolver-convention` baixam o toolchain, e o
