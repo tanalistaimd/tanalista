@@ -35,6 +35,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * @param onNomeChange Evento disparado quando o nome é alterado.
  * @param onCriar Evento disparado quando o usuário solicita a criação.
  * @param modifier Modificador opcional aplicado à tela.
+ * @param onAbrirLista Evento disparado quando o usuário toca em uma lista para ver seus itens.
  * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
  * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
  */
@@ -46,6 +47,7 @@ fun ListaFormScreen(
     mensagemSucesso: String?,
     onNomeChange: (String) -> Unit,
     onCriar: () -> Unit,
+    onAbrirLista: (ListaCompra) -> Unit,
     onEditarLista: (ListaCompra) -> Unit,
     onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
@@ -105,6 +107,7 @@ fun ListaFormScreen(
         Text("Minhas listas", style = MaterialTheme.typography.titleLarge)
         ListaResumoContent(
             listas = listas,
+            onAbrirLista = onAbrirLista,
             onEditarLista = onEditarLista,
             onExcluirLista = onExcluirLista,
             modifier = Modifier.weight(1f),
@@ -116,6 +119,7 @@ fun ListaFormScreen(
  * Exibe as listas de compras criadas pelo usuário.
  *
  * @param listas Listas que serão apresentadas na tela.
+ * @param onAbrirLista Evento disparado quando o usuário toca em uma lista.
  * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
  * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
  * @param modifier Modificador opcional aplicado à listagem.
@@ -123,6 +127,7 @@ fun ListaFormScreen(
 @Composable
 private fun ListaResumoContent(
     listas: List<ListaComProgresso>,
+    onAbrirLista: (ListaCompra) -> Unit,
     onEditarLista: (ListaCompra) -> Unit,
     onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
@@ -132,7 +137,10 @@ private fun ListaResumoContent(
     } else {
         LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(listas, key = { it.lista.id }) { resumo ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    onClick = { onAbrirLista(resumo.lista) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                     ) {
@@ -205,6 +213,7 @@ private fun ListaFormScreenPreview() {
             mensagemSucesso = null,
             onNomeChange = {},
             onCriar = {},
+            onAbrirLista = {},
             onEditarLista = {},
             onExcluirLista = {},
         )

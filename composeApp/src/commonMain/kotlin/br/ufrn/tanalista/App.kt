@@ -10,10 +10,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import br.ufrn.tanalista.model.ListaComProgresso
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.ProgressoCompra
 import br.ufrn.tanalista.model.ordenarPorAtualizacao
+import br.ufrn.tanalista.navigation.ListaDetalheRota
+import br.ufrn.tanalista.navigation.ListasRota
+import br.ufrn.tanalista.ui.item.FormularioItem
+import br.ufrn.tanalista.ui.item.ItensState
+import br.ufrn.tanalista.ui.item.ListaDetalheScreen
 import br.ufrn.tanalista.ui.lista.ListaFormScreen
 import br.ufrn.tanalista.validation.ListaCompraValidator
 import kotlin.time.Clock
@@ -27,40 +36,84 @@ import kotlin.time.Clock
 @Composable
 fun App() {
     val state = remember { ListaAppState() }
+    val itensState = remember { ItensState() }
+    val navController = rememberNavController()
 
     MaterialTheme {
-        ListaFormScreen(
-            listas = state.listasComProgresso,
-            nome = state.nome,
-            erro = state.erroCriacao,
-            mensagemSucesso = state.mensagemSucesso,
-            onNomeChange = state::alterarNome,
-            onCriar = state::criarLista,
-            onEditarLista = state::iniciarEdicao,
-            onExcluirLista = state::solicitarExclusao,
+        NavHost(navController = navController, startDestination = ListasRota) {
+            composable<ListasRota> {
+                ListasDestino(
+                    state = state,
+                    itensState = itensState,
+                    onAbrirLista = { lista -> navController.navigate(ListaDetalheRota(lista.id)) },
+                )
+            }
+
+            composable<ListaDetalheRota> { entrada ->
+                val rota = entrada.toRoute<ListaDetalheRota>()
+                var formulario by remember { mutableStateOf(FormularioItem()) }
+
+                ListaDetalheScreen(
+                    lista = state.listas.find { it.id == rota.listaId },
+                    itens = itensState.daLista(rota.listaId),
+                    formulario = formulario,
+                    onFormularioChange = { formulario = it },
+                    onAdicionar = {
+                        if (itensState.adicionar(rota.listaId, formulario)) {
+                            formulario = FormularioItem()
+                        }
+                    },
+                    onVoltar = { navController.popBackStack() },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListasDestino(
+    state: ListaAppState,
+    itensState: ItensState,
+    onAbrirLista: (ListaCompra) -> Unit,
+) {
+    ListaFormScreen(
+        listas =
+            state.listasComProgresso.map { resumo ->
+                resumo.copy(
+                    progresso = resumo.progresso.copy(totalItens = itensState.daLista(resumo.lista.id).size),
+                )
+            },
+        nome = state.nome,
+        erro = state.erroCriacao,
+        mensagemSucesso = state.mensagemSucesso,
+        onNomeChange = state::alterarNome,
+        onCriar = state::criarLista,
+        onAbrirLista = onAbrirLista,
+        onEditarLista = state::iniciarEdicao,
+        onExcluirLista = state::solicitarExclusao,
+    )
+
+    state.listaParaEditar?.let { lista ->
+        DialogoEditarLista(
+            nomeEditado = state.nomeEditado,
+            erro = state.erroEdicao(lista),
+            onNomeChange = state::alterarNomeEditado,
+            onSalvar = {
+                state.salvarEdicao(lista)
+            },
+            onCancelar = state::cancelarEdicao,
         )
+    }
 
-        state.listaParaEditar?.let { lista ->
-            DialogoEditarLista(
-                nomeEditado = state.nomeEditado,
-                erro = state.erroEdicao(lista),
-                onNomeChange = state::alterarNomeEditado,
-                onSalvar = {
-                    state.salvarEdicao(lista)
-                },
-                onCancelar = state::cancelarEdicao,
-            )
-        }
-
-        state.listaParaExcluir?.let { lista ->
-            DialogoExcluirLista(
-                lista = lista,
-                onConfirmar = {
-                    state.confirmarExclusao(lista)
-                },
-                onCancelar = state::cancelarExclusao,
-            )
-        }
+    state.listaParaExcluir?.let { lista ->
+        DialogoExcluirLista(
+            lista = lista,
+            onConfirmar = {
+                state.confirmarExclusao(lista)
+                itensState.removerDaLista(lista.id)
+            },
+            onCancelar = state::cancelarExclusao,
+        )
     }
 }
 
