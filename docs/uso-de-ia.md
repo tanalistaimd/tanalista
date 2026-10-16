@@ -55,6 +55,16 @@ Uma seção por sprint, no mesmo formato.
 
 ## Sprint 1
 
+### Integração de develop — 16/10/2026
+
+**Ferramenta:** OpenCode (GPT-6.1 Sol Fast). **Quem solicitou:** Vinicius.
+Com autorização para atualizar a integração, reuniu em uma branch baseada em
+`develop` os commits do #35 que haviam entrado apenas em `feat/deep-link`,
+preservando o histórico, e habilitou CI em pushes para `develop` além de `main`.
+Verificação local: `gradlew.bat ktlintCheck detekt :composeApp:desktopTest
+:composeApp:assembleDebug --no-daemon` passou. Publicação por PR para revisão
+humana; não houve validação manual de interface nesta execução.
+
 **Ferramenta:** OpenCode (GPT-6 Sol). **Quem usou:** Vinicius.
 
 | Tarefa | O que a ferramenta fez | Como foi verificado |
