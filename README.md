@@ -148,6 +148,9 @@ Ajustes de acessibilidade:
 Para conferir com o TalkBack: em Configurações → Acessibilidade → TalkBack, ative o
 serviço e percorra a tela de listas e a de detalhe deslizando para a direita.
 
+Percurso feito em 16/10, no emulador Android em português: as duas telas foram
+percorridas com o TalkBack, e todos os anúncios acima saíram como descritos.
+
 A URL da API é lida de configuração. Sem ela, o aplicativo sobe em modo local, com a
 implementação falsa do repositório — é o que permite rodar e demonstrar o app antes de
 o backend existir.
