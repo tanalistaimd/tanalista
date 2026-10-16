@@ -1,8 +1,9 @@
 package br.ufrn.tanalista
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavUri
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,6 +29,7 @@ import br.ufrn.tanalista.ui.item.FormularioItem
 import br.ufrn.tanalista.ui.item.ItensState
 import br.ufrn.tanalista.ui.item.ListaDetalheScreen
 import br.ufrn.tanalista.ui.lista.ListaFormScreen
+import br.ufrn.tanalista.ui.tema.TaNaListaTema
 import br.ufrn.tanalista.validation.ListaCompraValidator
 import kotlin.time.Clock
 
@@ -47,35 +50,41 @@ fun App() {
         onDispose { ExternalUriHandler.ouvinte = null }
     }
 
-    MaterialTheme {
-        NavHost(navController = navController, startDestination = ListasRota) {
-            composable<ListasRota> {
-                ListasDestino(
-                    state = state,
-                    itensState = itensState,
-                    onAbrirLista = { lista -> navController.navigate(ListaDetalheRota(lista.id)) },
-                )
-            }
+    TaNaListaTema {
+        Scaffold { espacoSistema ->
+            NavHost(
+                navController = navController,
+                startDestination = ListasRota,
+                modifier = Modifier.padding(espacoSistema),
+            ) {
+                composable<ListasRota> {
+                    ListasDestino(
+                        state = state,
+                        itensState = itensState,
+                        onAbrirLista = { lista -> navController.navigate(ListaDetalheRota(lista.id)) },
+                    )
+                }
 
-            composable<ListaDetalheRota>(
-                deepLinks = listOf(navDeepLink<ListaDetalheRota>(basePath = BASE_DEEP_LINK_LISTA)),
-            ) { entrada ->
-                val rota = entrada.toRoute<ListaDetalheRota>()
-                var formulario by remember { mutableStateOf(FormularioItem()) }
+                composable<ListaDetalheRota>(
+                    deepLinks = listOf(navDeepLink<ListaDetalheRota>(basePath = BASE_DEEP_LINK_LISTA)),
+                ) { entrada ->
+                    val rota = entrada.toRoute<ListaDetalheRota>()
+                    var formulario by remember { mutableStateOf(FormularioItem()) }
 
-                ListaDetalheScreen(
-                    lista = state.listas.find { it.id == rota.listaId },
-                    itens = itensState.daLista(rota.listaId),
-                    formulario = formulario,
-                    onFormularioChange = { formulario = it },
-                    onAdicionar = {
-                        if (itensState.adicionar(rota.listaId, formulario)) {
-                            state.registrarAlteracao(rota.listaId)
-                            formulario = FormularioItem()
-                        }
-                    },
-                    onVoltar = { navController.popBackStack() },
-                )
+                    ListaDetalheScreen(
+                        lista = state.listas.find { it.id == rota.listaId },
+                        itens = itensState.daLista(rota.listaId),
+                        formulario = formulario,
+                        onFormularioChange = { formulario = it },
+                        onAdicionar = {
+                            if (itensState.adicionar(rota.listaId, formulario)) {
+                                state.registrarAlteracao(rota.listaId)
+                                formulario = FormularioItem()
+                            }
+                        },
+                        onVoltar = { navController.popBackStack() },
+                    )
+                }
             }
         }
     }
