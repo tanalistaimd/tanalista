@@ -113,19 +113,6 @@ O caminho do Android SDK vai em `local.properties`, que é de cada máquina e n�
 versionado. O Android Studio cria o arquivo no primeiro sync; para criar à mão,
 `sdk.dir=/caminho/para/o/Android/Sdk`.
 
-### Deep link
-
-O destino de detalhe da lista abre direto pelo endereço `tanalista://lista/{id}`.
-Com o app aberto no emulador ou no aparelho e uma lista criada:
-
-```bash
-adb shell am start -a android.intent.action.VIEW -d "tanalista://lista/1"
-```
-
-O app mostra a lista de id 1, e o Voltar retorna à tela de listas. Um id inexistente
-mostra "Lista não encontrada". Enquanto os dados ficarem só em memória, abrir o link
-com o app fechado inicia o app sem listas e cai nesse mesmo caso.
-
 A URL da API é lida de configuração. Sem ela, o aplicativo sobe em modo local, com a
 implementação falsa do repositório — é o que permite rodar e demonstrar o app antes de
 o backend existir.

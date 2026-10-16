@@ -6,21 +6,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.navigation.NavUri
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.resumirListas
-import br.ufrn.tanalista.navigation.BASE_DEEP_LINK_LISTA
-import br.ufrn.tanalista.navigation.ExternalUriHandler
 import br.ufrn.tanalista.navigation.ListaDetalheRota
 import br.ufrn.tanalista.navigation.ListasRota
 import br.ufrn.tanalista.ui.item.FormularioItem
@@ -42,11 +37,6 @@ fun App() {
     val itensState = remember { ItensState() }
     val navController = rememberNavController()
 
-    DisposableEffect(navController) {
-        ExternalUriHandler.ouvinte = { uri -> navController.navigate(NavUri(uri)) }
-        onDispose { ExternalUriHandler.ouvinte = null }
-    }
-
     MaterialTheme {
         NavHost(navController = navController, startDestination = ListasRota) {
             composable<ListasRota> {
@@ -57,9 +47,7 @@ fun App() {
                 )
             }
 
-            composable<ListaDetalheRota>(
-                deepLinks = listOf(navDeepLink<ListaDetalheRota>(basePath = BASE_DEEP_LINK_LISTA)),
-            ) { entrada ->
+            composable<ListaDetalheRota> { entrada ->
                 val rota = entrada.toRoute<ListaDetalheRota>()
                 var formulario by remember { mutableStateOf(FormularioItem()) }
 
