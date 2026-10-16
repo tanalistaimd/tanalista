@@ -2,6 +2,7 @@ package br.ufrn.tanalista.ui.lista
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,10 +17,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import br.ufrn.tanalista.model.ListaComProgresso
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.ProgressoCompra
+import br.ufrn.tanalista.ui.tema.TaNaListaTema
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -52,17 +60,63 @@ fun ListaFormScreen(
     onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(horizontal = 24.dp),
+        contentPadding = PaddingValues(vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        item {
+            FormularioListaContent(
+                nome = nome,
+                erro = erro,
+                mensagemSucesso = mensagemSucesso,
+                onNomeChange = onNomeChange,
+                onCriar = onCriar,
+            )
+        }
+
+        item {
+            Text(
+                text = "Minhas listas",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics { heading() },
+            )
+        }
+
+        if (listas.isEmpty()) {
+            item {
+                Text("Nenhuma lista criada ainda.")
+            }
+        } else {
+            items(listas, key = { it.lista.id }) { resumo ->
+                ListaResumoCard(
+                    resumo = resumo,
+                    onAbrir = { onAbrirLista(resumo.lista) },
+                    onEditar = { onEditarLista(resumo.lista) },
+                    onExcluir = { onExcluirLista(resumo.lista) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FormularioListaContent(
+    nome: String,
+    erro: String?,
+    mensagemSucesso: String?,
+    onNomeChange: (String) -> Unit,
+    onCriar: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // Título principal da tela.
         Text(
             text = "Nova lista",
             style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() },
         )
 
         // Campo em que o usuário informa o nome da nova lista.
@@ -89,6 +143,7 @@ fun ListaFormScreen(
             Text(
                 text = mensagemSucesso,
                 style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
         }
         /*
@@ -103,84 +158,67 @@ fun ListaFormScreen(
         ) {
             Text("Criar lista")
         }
-
-        Text("Minhas listas", style = MaterialTheme.typography.titleLarge)
-        ListaResumoContent(
-            listas = listas,
-            onAbrirLista = onAbrirLista,
-            onEditarLista = onEditarLista,
-            onExcluirLista = onExcluirLista,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
 
-/**
- * Exibe as listas de compras criadas pelo usuário.
- *
- * @param listas Listas que serão apresentadas na tela.
- * @param onAbrirLista Evento disparado quando o usuário toca em uma lista.
- * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
- * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
- * @param modifier Modificador opcional aplicado à listagem.
- */
 @Composable
-private fun ListaResumoContent(
-    listas: List<ListaComProgresso>,
-    onAbrirLista: (ListaCompra) -> Unit,
-    onEditarLista: (ListaCompra) -> Unit,
-    onExcluirLista: (ListaCompra) -> Unit,
-    modifier: Modifier = Modifier,
+private fun ListaResumoCard(
+    resumo: ListaComProgresso,
+    onAbrir: () -> Unit,
+    onEditar: () -> Unit,
+    onExcluir: () -> Unit,
 ) {
-    if (listas.isEmpty()) {
-        Text("Nenhuma lista criada ainda.")
-    } else {
-        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(listas, key = { it.lista.id }) { resumo ->
-                Card(
-                    onClick = { onAbrirLista(resumo.lista) },
-                    modifier = Modifier.fillMaxWidth(),
+    Card(
+        onClick = onAbrir,
+        modifier =
+            Modifier.fillMaxWidth().semantics {
+                onClick(label = "abrir itens") {
+                    onAbrir()
+                    true
+                }
+            },
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Text(
+                text = resumo.lista.nome,
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            Text(
+                text = "${resumo.progresso.itensComprados}/${resumo.progresso.totalItens} itens comprados",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier =
+                    Modifier.semantics {
+                        contentDescription =
+                            "${resumo.progresso.itensComprados} de " +
+                            "${resumo.progresso.totalItens} itens comprados"
+                    },
+            )
+
+            /*
+             * Ações disponíveis para cada lista.
+             *
+             * A tela não realiza diretamente a edição ou exclusão:
+             * apenas comunica a ação ao componente responsável pelo estado.
+             */
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(
+                    onClick = onEditar,
+                    modifier = Modifier.semantics { contentDescription = "Editar ${resumo.lista.nome}" },
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                    ) {
-                        Text(
-                            text = resumo.lista.nome,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+                    Text("Editar")
+                }
 
-                        Text(
-                            text = "${resumo.progresso.itensComprados}/${resumo.progresso.totalItens} itens comprados",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-
-                        /*
-                         * Ações disponíveis para cada lista.
-                         *
-                         * A tela não realiza diretamente a edição ou exclusão:
-                         * apenas comunica a ação ao componente responsável pelo estado.
-                         */
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            TextButton(
-                                onClick = {
-                                    onEditarLista(resumo.lista)
-                                },
-                            ) {
-                                Text("Editar")
-                            }
-
-                            TextButton(
-                                onClick = {
-                                    onExcluirLista(resumo.lista)
-                                },
-                            ) {
-                                Text("Excluir")
-                            }
-                        }
-                    }
+                TextButton(
+                    onClick = onExcluir,
+                    modifier = Modifier.semantics { contentDescription = "Excluir ${resumo.lista.nome}" },
+                ) {
+                    Text("Excluir")
                 }
             }
         }
@@ -196,7 +234,7 @@ private fun ListaResumoContent(
 @Preview
 @Composable
 private fun ListaFormScreenPreview() {
-    MaterialTheme {
+    TaNaListaTema(escuro = false) {
         ListaFormScreen(
             listas =
                 listOf(
@@ -223,11 +261,29 @@ private fun ListaFormScreenPreview() {
 @Preview
 @Composable
 private fun ListaFormScreenVaziaPreview() {
-    MaterialTheme {
+    TaNaListaTema(escuro = false) {
         ListaFormScreen(
             listas = emptyList(),
             nome = "",
             erro = null,
+            mensagemSucesso = null,
+            onNomeChange = {},
+            onCriar = {},
+            onAbrirLista = {},
+            onEditarLista = {},
+            onExcluirLista = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ListaFormScreenEscuroPreview() {
+    TaNaListaTema(escuro = true) {
+        ListaFormScreen(
+            listas = listOf(ListaComProgresso(ListaCompra(1, "Compras do mês"), ProgressoCompra(2, 5))),
+            nome = "",
+            erro = "O nome da lista é obrigatório.",
             mensagemSucesso = null,
             onNomeChange = {},
             onCriar = {},

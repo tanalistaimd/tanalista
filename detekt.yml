@@ -22,6 +22,15 @@ naming:
 style:
   MagicNumber:
     ignoreAnnotated: ['Composable', 'Preview']
+    excludes:
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/jvmTest/**'
+      - '**/desktopTest/**'
+      - '**/androidUnitTest/**'
+      - '**/androidInstrumentedTest/**'
+      - '**/ui/tema/**'
   UnusedPrivateMember:
     ignoreAnnotated: ['Composable', 'Preview']
   MaxLineLength:
