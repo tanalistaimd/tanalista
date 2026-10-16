@@ -11,6 +11,7 @@
         <activity
             android:exported="true"
             android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode|density"
             android:name="br.ufrn.tanalista.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +29,7 @@ import br.ufrn.tanalista.model.Categoria
 import br.ufrn.tanalista.model.ItemLista
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.Unidade
+import br.ufrn.tanalista.ui.tema.TaNaListaTema
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** [lista] é `null` quando o id da rota não corresponde a nenhuma lista existente. */
@@ -49,7 +51,10 @@ fun ListaDetalheScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            TextButton(onClick = onVoltar) {
+            TextButton(
+                onClick = onVoltar,
+                modifier = Modifier.semantics { contentDescription = "Voltar para as listas" },
+            ) {
                 Text("Voltar")
             }
             Text(
@@ -160,7 +165,11 @@ private fun <T> SeletorOpcional(
     onSelecionar: (T?) -> Unit,
 ) {
     Column {
-        Text(text = titulo, style = MaterialTheme.typography.labelLarge)
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.semantics { heading() },
+        )
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -207,7 +216,7 @@ internal fun detalhesDoItem(item: ItemLista): String {
 @Preview
 @Composable
 private fun ListaDetalheScreenPreview() {
-    MaterialTheme {
+    TaNaListaTema(escuro = false) {
         ListaDetalheScreen(
             lista = ListaCompra(1, "Compras do mês"),
             itens =
@@ -227,11 +236,26 @@ private fun ListaDetalheScreenPreview() {
 @Preview
 @Composable
 private fun ListaDetalheScreenVaziaPreview() {
-    MaterialTheme {
+    TaNaListaTema(escuro = false) {
         ListaDetalheScreen(
             lista = ListaCompra(1, "Compras do mês"),
             itens = emptyList(),
             formulario = FormularioItem(),
+            onFormularioChange = {},
+            onAdicionar = {},
+            onVoltar = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ListaDetalheScreenEscuroPreview() {
+    TaNaListaTema(escuro = true) {
+        ListaDetalheScreen(
+            lista = ListaCompra(1, "Compras do mês"),
+            itens = listOf(ItemLista(1, 1, "Tomate", 1.5, Unidade.QUILO, Categoria.HORTIFRUTI)),
+            formulario = FormularioItem(nome = "tomate", quantidade = "0"),
             onFormularioChange = {},
             onAdicionar = {},
             onVoltar = {},

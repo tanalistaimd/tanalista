@@ -126,6 +126,31 @@ O app mostra a lista de id 1, e o Voltar retorna à tela de listas. Um id inexis
 mostra "Lista não encontrada". Enquanto os dados ficarem só em memória, abrir o link
 com o app fechado inicia o app sem listas e cai nesse mesmo caso.
 
+### Tema e acessibilidade
+
+O app segue o tema claro ou escuro do sistema, com um esquema de cor Material 3 próprio
+(`ui/tema/Tema.kt`). As telas usam só as cores pelos papéis do tema, e um `Scaffold` na
+raiz afasta o conteúdo das barras do sistema. A Activity trata sozinha a troca de tema e a
+rotação, então as listas em memória não se perdem ao girar o aparelho ou mudar o modo.
+
+Ajustes de acessibilidade:
+
+- Os títulos "Nova lista", "Minhas listas", o nome da lista, "Itens", "Unidade" e
+  "Categoria" são anunciados como títulos, o que permite navegar por eles.
+- "Editar" e "Excluir" de cada cartão anunciam a lista a que se referem ("Editar Casa"),
+  em vez de repetir o mesmo rótulo em todos os cartões.
+- O progresso é lido como "2 de 5 itens comprados", e não como "2 barra 5".
+- Tocar duas vezes num cartão anuncia a ação "abrir itens".
+- "Voltar" é anunciado como "Voltar para as listas".
+- A confirmação "Lista criada com sucesso." é anunciada sem tirar o foco do campo.
+- Botões, chips e cartões são componentes Material 3, com alvo de toque mínimo de 48 dp.
+
+Para conferir com o TalkBack: em Configurações → Acessibilidade → TalkBack, ative o
+serviço e percorra a tela de listas e a de detalhe deslizando para a direita.
+
+Percurso feito em 16/10, no emulador Android em português: as duas telas foram
+percorridas com o TalkBack, e todos os anúncios acima saíram como descritos.
+
 A URL da API é lida de configuração. Sem ela, o aplicativo sobe em modo local, com a
 implementação falsa do repositório — é o que permite rodar e demonstrar o app antes de
 o backend existir.
