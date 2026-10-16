@@ -219,3 +219,21 @@ private fun ListaFormScreenPreview() {
         )
     }
 }
+
+@Preview
+@Composable
+private fun ListaFormScreenVaziaPreview() {
+    MaterialTheme {
+        ListaFormScreen(
+            listas = emptyList(),
+            nome = "",
+            erro = null,
+            mensagemSucesso = null,
+            onNomeChange = {},
+            onCriar = {},
+            onAbrirLista = {},
+            onEditarLista = {},
+            onExcluirLista = {},
+        )
+    }
+}

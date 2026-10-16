@@ -14,10 +14,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import br.ufrn.tanalista.model.ListaComProgresso
 import br.ufrn.tanalista.model.ListaCompra
-import br.ufrn.tanalista.model.ProgressoCompra
-import br.ufrn.tanalista.model.ordenarPorAtualizacao
+import br.ufrn.tanalista.model.resumirListas
 import br.ufrn.tanalista.navigation.ListaDetalheRota
 import br.ufrn.tanalista.navigation.ListasRota
 import br.ufrn.tanalista.ui.item.FormularioItem
@@ -60,6 +58,7 @@ fun App() {
                     onFormularioChange = { formulario = it },
                     onAdicionar = {
                         if (itensState.adicionar(rota.listaId, formulario)) {
+                            state.registrarAlteracao(rota.listaId)
                             formulario = FormularioItem()
                         }
                     },
@@ -77,12 +76,7 @@ private fun ListasDestino(
     onAbrirLista: (ListaCompra) -> Unit,
 ) {
     ListaFormScreen(
-        listas =
-            state.listasComProgresso.map { resumo ->
-                resumo.copy(
-                    progresso = resumo.progresso.copy(totalItens = itensState.daLista(resumo.lista.id).size),
-                )
-            },
+        listas = resumirListas(state.listas, itensState.itens),
         nome = state.nome,
         erro = state.erroCriacao,
         mensagemSucesso = state.mensagemSucesso,
@@ -96,7 +90,7 @@ private fun ListasDestino(
     state.listaParaEditar?.let { lista ->
         DialogoEditarLista(
             nomeEditado = state.nomeEditado,
-            erro = state.erroEdicao(lista),
+            erro = state.erroEdicao,
             onNomeChange = state::alterarNomeEditado,
             onSalvar = {
                 state.salvarEdicao(lista)
@@ -123,7 +117,9 @@ private fun ListasDestino(
  * Concentra as regras de criação, edição e exclusão para evitar
  * que o componente principal acumule responsabilidades.
  */
-private class ListaAppState {
+internal class ListaAppState(
+    private val agora: () -> Long = { Clock.System.now().toEpochMilliseconds() },
+) {
     var nome by mutableStateOf("")
         private set
 
@@ -145,23 +141,13 @@ private class ListaAppState {
     var nomeEditado by mutableStateOf("")
         private set
 
-    /**
-     * Listas preparadas para exibição na interface.
-     */
-    val listasComProgresso: List<ListaComProgresso>
-        get() =
-            ordenarPorAtualizacao(
-                listas.map { lista ->
-                    ListaComProgresso(
-                        lista = lista,
-                        progresso =
-                            ProgressoCompra(
-                                itensComprados = 0,
-                                totalItens = 0,
-                            ),
-                    )
-                },
-            )
+    /** Atualiza a ordenação após uma alteração efetiva nos itens da lista. */
+    fun registrarAlteracao(listaId: Int) {
+        listas =
+            listas.map { lista ->
+                if (lista.id == listaId) lista.copy(atualizadaEm = agora()) else lista
+            }
+    }
 
     /**
      * Verifica se o nome informado já pertence a outra lista.
@@ -216,10 +202,7 @@ private class ListaAppState {
             ListaCompra(
                 id = (listas.maxOfOrNull { it.id } ?: 0) + 1,
                 nome = nome.trim(),
-                atualizadaEm =
-                    Clock.System
-                        .now()
-                        .toEpochMilliseconds(),
+                atualizadaEm = agora(),
             )
 
         listas = listas + novaLista
@@ -247,32 +230,33 @@ private class ListaAppState {
     /**
      * Valida o nome informado durante a edição.
      */
-    fun erroEdicao(lista: ListaCompra): String? =
-        when {
-            nomeEditado.isBlank() ->
-                "O nome da lista é obrigatório."
+    val erroEdicao: String?
+        get() =
+            when {
+                nomeEditado.isBlank() ->
+                    "O nome da lista é obrigatório."
 
-            nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
-                "O nome deve ter no máximo " +
-                    "${ListaCompraValidator.LIMITE_NOME} caracteres."
+                nomeEditado.trim().length > ListaCompraValidator.LIMITE_NOME ->
+                    "O nome deve ter no máximo " +
+                        "${ListaCompraValidator.LIMITE_NOME} caracteres."
 
-            ListaCompraValidator.nomeJaExiste(
-                nome = nomeEditado,
-                listasExistentes =
-                    listas.filter { listaExistente ->
-                        listaExistente.id != lista.id
-                    },
-            ) ->
-                "Já existe uma lista com esse nome."
+                ListaCompraValidator.nomeJaExiste(
+                    nome = nomeEditado,
+                    listasExistentes =
+                        listas.filter { listaExistente ->
+                            listaExistente.id != listaParaEditar?.id
+                        },
+                ) ->
+                    "Já existe uma lista com esse nome."
 
-            else -> null
-        }
+                else -> null
+            }
 
     /**
      * Salva a alteração realizada no nome da lista.
      */
     fun salvarEdicao(lista: ListaCompra) {
-        if (erroEdicao(lista) != null) {
+        if (erroEdicao != null) {
             return
         }
 
@@ -281,10 +265,7 @@ private class ListaAppState {
                 if (listaExistente.id == lista.id) {
                     listaExistente.copy(
                         nome = nomeEditado.trim(),
-                        atualizadaEm =
-                            Clock.System
-                                .now()
-                                .toEpochMilliseconds(),
+                        atualizadaEm = agora(),
                     )
                 } else {
                     listaExistente
