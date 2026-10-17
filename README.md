@@ -21,6 +21,8 @@ acompanhar o total do carrinho em tempo real. Funciona integralmente offline.
 | --- | --- | --- |
 | S0 | Processos | [Video](https://drive.google.com/file/d/1NEeRK6f56SY1XePAM1vV2U4zZLVNjdLq/view?usp=drive_link) |
 | S0 | Dispositivos Móveis | [Video](https://drive.google.com/file/d/1aCfptLRS1EZXZ02XfxeIgZlD6x8DVuiZ/view?usp=drive_link) |
+| S1 | Processos | [Video](https://youtu.be/T_HXmYdvuCU) |
+| S1 | Dispositivos Móveis | [Video](https://youtu.be/gZk6tP9Zvvg) |
 
 ## Equipe
 
