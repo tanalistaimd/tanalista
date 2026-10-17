@@ -145,6 +145,18 @@ Um item sai de "Em revisão" quando **todas** valem:
 
 Nenhuma condição admite exceção por prazo. Item que não cumpre volta para "Em progresso".
 
+### Prática XP: revisão de código com integração contínua
+
+A prática adotada a partir da Sprint 1 é a revisão de código, apoiada pela integração
+contínua. Todo trabalho entra por PR; o GitHub Actions roda `ktlintCheck`, `detekt` e o
+build em todo PR e em todo push para `develop` e `main`; e o PR só é integrado com a
+aprovação de outro integrante, com ao menos um comentário sobre o código ou sobre o teste
+feito no dispositivo. A evidência fica nos próprios PRs: aprovações, comentários e checks.
+
+Revisão de PR tem prazo de 48 horas. PR aberto há mais de dois dias entra na pauta da
+sincronização. `develop` é integrada em `main` toda sexta-feira, por PR, para que `main`
+nunca fique mais de uma semana atrás.
+
 ### Fluxo do quadro e limites de trabalho em curso
 
 | Coluna | O que autoriza entrar | WIP |
@@ -152,7 +164,7 @@ Nenhuma condição admite exceção por prazo. Item que não cumpre volta para "
 | Backlog | Priorizado pelo PO | — |
 | Sprint Backlog | Comprometido no planejamento | — |
 | Em progresso | Alguém assumiu o item | **3** |
-| Em revisão | PR aberto e CI verde | **2** |
+| Em revisão | PR aberto e CI verde; revisão em até 48 horas | **2** |
 | Pronto | Definição de Pronto cumprida | — |
 
 Três em progresso é um item por pessoa. O limite de revisão é deliberadamente menor: deixar a fila crescer até três, com três pessoas, significa que ninguém está revisando. Com o limite atingido, revisar o PR do colega tem prioridade sobre iniciar item novo.
