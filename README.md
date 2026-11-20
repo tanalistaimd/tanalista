@@ -84,9 +84,11 @@ obrigatórios, limitados a 60 caracteres e únicos após normalização. As list
 aparecem da mais recentemente atualizada para a mais antiga: criar, renomear ou
 adicionar um item atualiza essa ordem. Cada cartão mostra `comprados/total`, com o
 total real de itens daquela lista (`0/0` quando vazia, `0/3` com três itens).
-O número de comprados permanece zero até a implementação da marcação da issue #14;
-o preview demonstra um exemplo com progresso preenchido. Os dados permanecem
-apenas em memória e são perdidos ao encerrar o aplicativo.
+Abra **Modo Mercado** no cartão da lista para informar o preço unitário encontrado
+e a quantidade levada de cada item comprado. O subtotal aparece no item, e o total
+fica no topo. É possível corrigir os valores ou desmarcar a compra. Ao voltar para
+as listas, o contador mostra as marcações da sessão. Os dados permanecem em memória
+e são perdidos ao encerrar o aplicativo.
 
 **Verificação manual da #8 no Android:** crie duas listas, abra a mais antiga e
 adicione dois itens. Ao voltar, ela deve aparecer primeiro com `0/2`, e a outra

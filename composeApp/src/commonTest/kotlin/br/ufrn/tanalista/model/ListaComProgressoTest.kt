@@ -40,4 +40,20 @@ class ListaComProgressoTest {
     fun `itens sem lista correspondente nao criam resumos`() {
         assertEquals(emptyList(), resumirListas(emptyList(), listOf(ItemLista(1, 1, "Leite"))))
     }
+
+    @Test
+    fun `resumo conta marcacoes da compra da lista e ignora item removido`() {
+        val listas = listOf(ListaCompra(1, "Casa"), ListaCompra(2, "Festa"))
+        val leite = ItemLista(1, 1, "Leite")
+        val pao = ItemLista(2, 1, "Pão")
+        val suco = ItemLista(3, 2, "Suco")
+        val registro = RegistroCompra(600, 1_000)
+        val compra = Compra(1).marcarComprado(leite, registro).marcarComprado(pao, registro)
+
+        val resumos = resumirListas(listas, listOf(leite, suco), mapOf(1 to compra)).associateBy { it.lista.id }
+
+        assertEquals(ProgressoCompra(1, 1), resumos[1]?.progresso)
+        assertEquals(ProgressoCompra(0, 1), resumos[2]?.progresso)
+        assertEquals(600L, compra.limitarA(listOf(leite)).totalCentavos)
+    }
 }
