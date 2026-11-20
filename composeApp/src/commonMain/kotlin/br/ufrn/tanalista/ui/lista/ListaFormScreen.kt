@@ -59,6 +59,7 @@ fun ListaFormScreen(
     onEditarLista: (ListaCompra) -> Unit,
     onExcluirLista: (ListaCompra) -> Unit,
     modifier: Modifier = Modifier,
+    onAbrirMercado: ((ListaCompra) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier =
@@ -97,6 +98,7 @@ fun ListaFormScreen(
                     onAbrir = { onAbrirLista(resumo.lista) },
                     onEditar = { onEditarLista(resumo.lista) },
                     onExcluir = { onExcluirLista(resumo.lista) },
+                    onAbrirMercado = onAbrirMercado?.let { abrir -> { abrir(resumo.lista) } },
                 )
             }
         }
@@ -167,6 +169,7 @@ private fun ListaResumoCard(
     onAbrir: () -> Unit,
     onEditar: () -> Unit,
     onExcluir: () -> Unit,
+    onAbrirMercado: (() -> Unit)?,
 ) {
     Card(
         onClick = onAbrir,
@@ -219,6 +222,17 @@ private fun ListaResumoCard(
                     modifier = Modifier.semantics { contentDescription = "Excluir ${resumo.lista.nome}" },
                 ) {
                     Text("Excluir")
+                }
+            }
+            if (onAbrirMercado != null) {
+                Button(
+                    onClick = onAbrirMercado,
+                    modifier =
+                        Modifier.fillMaxWidth().semantics {
+                            contentDescription = "Modo Mercado · ${resumo.lista.nome}"
+                        },
+                ) {
+                    Text("Modo Mercado")
                 }
             }
         }
