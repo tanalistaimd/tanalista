@@ -23,12 +23,14 @@ data class FormularioItem(
     fun erroNome(
         listaId: Int,
         itensExistentes: List<ItemLista>,
+        ignorarItemId: Int? = null,
     ): String? =
         when {
             nome.trim().length > ItemListaValidator.LIMITE_NOME ->
                 "O nome deve ter no máximo ${ItemListaValidator.LIMITE_NOME} caracteres."
 
-            nome.isNotBlank() && ItemListaValidator.nomeJaExiste(nome, listaId, itensExistentes) ->
+            nome.isNotBlank() &&
+                ItemListaValidator.nomeJaExiste(nome, listaId, itensExistentes, ignorarItemId) ->
                 "Este item já está na lista."
 
             else -> null
@@ -45,8 +47,9 @@ data class FormularioItem(
     fun podeAdicionar(
         listaId: Int,
         itensExistentes: List<ItemLista>,
+        ignorarItemId: Int? = null,
     ): Boolean =
         ItemListaValidator.nomeEhValido(nome) &&
-            erroNome(listaId, itensExistentes) == null &&
+            erroNome(listaId, itensExistentes, ignorarItemId) == null &&
             erroQuantidade() == null
 }
