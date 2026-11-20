@@ -9,3 +9,8 @@ object ListasRota
 data class ListaDetalheRota(
     val listaId: Int,
 )
+
+@Serializable
+data class MercadoRota(
+    val listaId: Int,
+)

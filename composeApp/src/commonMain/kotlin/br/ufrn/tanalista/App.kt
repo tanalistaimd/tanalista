@@ -19,16 +19,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import br.ufrn.tanalista.model.Compra
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.resumirListas
 import br.ufrn.tanalista.navigation.BASE_DEEP_LINK_LISTA
 import br.ufrn.tanalista.navigation.ExternalUriHandler
 import br.ufrn.tanalista.navigation.ListaDetalheRota
 import br.ufrn.tanalista.navigation.ListasRota
+import br.ufrn.tanalista.navigation.MercadoRota
 import br.ufrn.tanalista.ui.item.FormularioItem
 import br.ufrn.tanalista.ui.item.ItensState
 import br.ufrn.tanalista.ui.item.ListaDetalheScreen
 import br.ufrn.tanalista.ui.lista.ListaFormScreen
+import br.ufrn.tanalista.ui.mercado.MercadoScreen
 import br.ufrn.tanalista.ui.tema.TaNaListaTema
 import br.ufrn.tanalista.validation.ListaCompraValidator
 import kotlin.time.Clock
@@ -44,6 +47,7 @@ fun App() {
     val state = remember { ListaAppState() }
     val itensState = remember { ItensState() }
     val navController = rememberNavController()
+    var compras by remember { mutableStateOf(emptyMap<Int, Compra>()) }
 
     DisposableEffect(navController) {
         ExternalUriHandler.ouvinte = { uri -> navController.navigate(NavUri(uri)) }
@@ -61,7 +65,21 @@ fun App() {
                     ListasDestino(
                         state = state,
                         itensState = itensState,
+                        compras = compras,
                         onAbrirLista = { lista -> navController.navigate(ListaDetalheRota(lista.id)) },
+                        onAbrirMercado = { lista -> navController.navigate(MercadoRota(lista.id)) },
+                        onExcluirCompra = { listaId -> compras = compras - listaId },
+                    )
+                }
+
+                composable<MercadoRota> { entrada ->
+                    val listaId = entrada.toRoute<MercadoRota>().listaId
+                    MercadoDestino(
+                        lista = state.listas.find { it.id == listaId },
+                        itensState = itensState,
+                        compra = compras[listaId],
+                        onCompraChange = { compra -> compras = compras + (listaId to compra) },
+                        onSair = { navController.popBackStack() },
                     )
                 }
 
@@ -124,10 +142,13 @@ private fun ListaDetalheDestino(
 private fun ListasDestino(
     state: ListaAppState,
     itensState: ItensState,
+    compras: Map<Int, Compra>,
     onAbrirLista: (ListaCompra) -> Unit,
+    onAbrirMercado: (ListaCompra) -> Unit,
+    onExcluirCompra: (Int) -> Unit,
 ) {
     ListaFormScreen(
-        listas = resumirListas(state.listas, itensState.itens),
+        listas = resumirListas(state.listas, itensState.itens, compras),
         nome = state.nome,
         erro = state.erroCriacao,
         mensagemSucesso = state.mensagemSucesso,
@@ -136,6 +157,7 @@ private fun ListasDestino(
         onAbrirLista = onAbrirLista,
         onEditarLista = state::iniciarEdicao,
         onExcluirLista = state::solicitarExclusao,
+        onAbrirMercado = onAbrirMercado,
     )
 
     state.listaParaEditar?.let { lista ->
@@ -156,10 +178,29 @@ private fun ListasDestino(
             onConfirmar = {
                 state.confirmarExclusao(lista)
                 itensState.removerDaLista(lista.id)
+                onExcluirCompra(lista.id)
             },
             onCancelar = state::cancelarExclusao,
         )
     }
+}
+
+@Composable
+private fun MercadoDestino(
+    lista: ListaCompra?,
+    itensState: ItensState,
+    compra: Compra?,
+    onCompraChange: (Compra) -> Unit,
+    onSair: () -> Unit,
+) {
+    val itens = lista?.let { itensState.daLista(it.id) }.orEmpty()
+    MercadoScreen(
+        lista = lista,
+        itens = itens,
+        compra = lista?.let { (compra ?: Compra(it.id)).limitarA(itens) },
+        onCompraChange = onCompraChange,
+        onSair = onSair,
+    )
 }
 
 /**
