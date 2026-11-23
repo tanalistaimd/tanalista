@@ -18,6 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Falha intencional e temporária para demonstrar a proteção da main (issue #48).
+      - name: Teste temporário de bloqueio por CI
+        run: exit 1
+
       - uses: actions/checkout@v4
 
       - name: Valida o wrapper do Gradle
