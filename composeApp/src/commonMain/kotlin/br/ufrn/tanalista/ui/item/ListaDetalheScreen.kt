@@ -2,6 +2,7 @@ package br.ufrn.tanalista.ui.item
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,14 +12,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -30,6 +43,7 @@ import br.ufrn.tanalista.model.ItemLista
 import br.ufrn.tanalista.model.ListaCompra
 import br.ufrn.tanalista.model.Unidade
 import br.ufrn.tanalista.ui.tema.TaNaListaTema
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** [lista] é `null` quando o id da rota não corresponde a nenhuma lista existente. */
@@ -40,12 +54,71 @@ fun ListaDetalheScreen(
     formulario: FormularioItem,
     onFormularioChange: (FormularioItem) -> Unit,
     onAdicionar: () -> Unit,
+    onEditar: (ItemLista, FormularioItem) -> Boolean,
+    onRemover: (ItemLista) -> Boolean,
+    onRestaurar: (ItemLista) -> Boolean,
     onVoltar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var itemEmEdicao by remember { mutableStateOf<ItemLista?>(null) }
+    val avisos = remember { SnackbarHostState() }
+    val escopo = rememberCoroutineScope()
+
+    Box(modifier = modifier.fillMaxSize()) {
+        ListaDetalheConteudo(
+            lista = lista,
+            itens = itens,
+            formulario = formulario,
+            onFormularioChange = onFormularioChange,
+            onAdicionar = onAdicionar,
+            onEditar = { itemEmEdicao = it },
+            onRemover = { item ->
+                if (onRemover(item)) {
+                    escopo.launch {
+                        val resultado =
+                            avisos.showSnackbar(
+                                "${item.nome} removido.",
+                                actionLabel = "Desfazer",
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Long,
+                            )
+                        if (resultado == SnackbarResult.ActionPerformed && !onRestaurar(item)) {
+                            avisos.showSnackbar("Não foi possível restaurar ${item.nome}.")
+                        }
+                    }
+                }
+            },
+            onVoltar = onVoltar,
+        )
+        SnackbarHost(hostState = avisos, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+
+    itemEmEdicao?.let { item ->
+        DialogoEditarItem(
+            item = item,
+            itens = itens,
+            onSalvar = { edicao ->
+                if (onEditar(item, edicao)) itemEmEdicao = null
+            },
+            onCancelar = { itemEmEdicao = null },
+        )
+    }
+}
+
+@Composable
+private fun ListaDetalheConteudo(
+    lista: ListaCompra?,
+    itens: List<ItemLista>,
+    formulario: FormularioItem,
+    onFormularioChange: (FormularioItem) -> Unit,
+    onAdicionar: () -> Unit,
+    onEditar: (ItemLista) -> Unit,
+    onRemover: (ItemLista) -> Unit,
+    onVoltar: () -> Unit,
+) {
     LazyColumn(
         modifier =
-            modifier
+            Modifier
                 .fillMaxSize()
                 .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -66,14 +139,21 @@ fun ListaDetalheScreen(
 
         if (lista != null) {
             item {
-                FormularioItemContent(
-                    formulario = formulario,
-                    erroNome = formulario.erroNome(lista.id, itens),
-                    erroQuantidade = formulario.erroQuantidade(),
-                    podeAdicionar = formulario.podeAdicionar(lista.id, itens),
-                    onFormularioChange = onFormularioChange,
-                    onAdicionar = onAdicionar,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CamposDoItem(
+                        formulario = formulario,
+                        erroNome = formulario.erroNome(lista.id, itens),
+                        erroQuantidade = formulario.erroQuantidade(),
+                        onFormularioChange = onFormularioChange,
+                    )
+                    Button(
+                        onClick = onAdicionar,
+                        enabled = formulario.podeAdicionar(lista.id, itens),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Adicionar item")
+                    }
+                }
             }
 
             item {
@@ -90,7 +170,7 @@ fun ListaDetalheScreen(
                 }
             } else {
                 items(itens, key = { it.id }) { item ->
-                    ItemListaCard(item)
+                    ItemListaCard(item, onEditar = { onEditar(item) }, onRemover = { onRemover(item) })
                 }
             }
         }
@@ -98,13 +178,11 @@ fun ListaDetalheScreen(
 }
 
 @Composable
-private fun FormularioItemContent(
+private fun CamposDoItem(
     formulario: FormularioItem,
     erroNome: String?,
     erroQuantidade: String?,
-    podeAdicionar: Boolean,
     onFormularioChange: (FormularioItem) -> Unit,
-    onAdicionar: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
@@ -144,15 +222,54 @@ private fun FormularioItemContent(
             rotulo = { it.classe },
             onSelecionar = { onFormularioChange(formulario.copy(categoria = it)) },
         )
-
-        Button(
-            onClick = onAdicionar,
-            enabled = podeAdicionar,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text("Adicionar item")
-        }
     }
+}
+
+@Composable
+private fun DialogoEditarItem(
+    item: ItemLista,
+    itens: List<ItemLista>,
+    onSalvar: (FormularioItem) -> Unit,
+    onCancelar: () -> Unit,
+) {
+    var formulario by remember(item.id) {
+        mutableStateOf(
+            FormularioItem(
+                nome = item.nome,
+                quantidade =
+                    item.quantidade
+                        ?.toString()
+                        ?.replace('.', ',')
+                        .orEmpty(),
+                unidade = item.unidade,
+                categoria = item.categoria,
+            ),
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        title = { Text("Editar item") },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                CamposDoItem(
+                    formulario = formulario,
+                    erroNome = formulario.erroNome(item.listaId, itens, ignorarItemId = item.id),
+                    erroQuantidade = formulario.erroQuantidade(),
+                    onFormularioChange = { formulario = it },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSalvar(formulario) },
+                enabled = formulario.podeAdicionar(item.listaId, itens, ignorarItemId = item.id),
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = { TextButton(onClick = onCancelar) { Text("Cancelar") } },
+    )
 }
 
 /** Tocar na opção já selecionada desfaz a seleção, porque o campo é opcional. */
@@ -188,7 +305,11 @@ private fun <T> SeletorOpcional(
 }
 
 @Composable
-private fun ItemListaCard(item: ItemLista) {
+private fun ItemListaCard(
+    item: ItemLista,
+    onEditar: () -> Unit,
+    onRemover: () -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = item.nome, style = MaterialTheme.typography.titleMedium)
@@ -196,6 +317,20 @@ private fun ItemListaCard(item: ItemLista) {
             val detalhes = detalhesDoItem(item)
             if (detalhes.isNotEmpty()) {
                 Text(text = detalhes, style = MaterialTheme.typography.bodyMedium)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = onEditar,
+                    modifier = Modifier.semantics { contentDescription = "Editar ${item.nome}" },
+                ) {
+                    Text("Editar")
+                }
+                TextButton(
+                    onClick = onRemover,
+                    modifier = Modifier.semantics { contentDescription = "Remover ${item.nome}" },
+                ) {
+                    Text("Remover")
+                }
             }
         }
     }
@@ -228,6 +363,9 @@ private fun ListaDetalheScreenPreview() {
             formulario = FormularioItem(nome = "leite 200G", quantidade = "0"),
             onFormularioChange = {},
             onAdicionar = {},
+            onEditar = { _, _ -> false },
+            onRemover = { false },
+            onRestaurar = { false },
             onVoltar = {},
         )
     }
@@ -243,6 +381,9 @@ private fun ListaDetalheScreenVaziaPreview() {
             formulario = FormularioItem(),
             onFormularioChange = {},
             onAdicionar = {},
+            onEditar = { _, _ -> false },
+            onRemover = { false },
+            onRestaurar = { false },
             onVoltar = {},
         )
     }
@@ -258,6 +399,9 @@ private fun ListaDetalheScreenEscuroPreview() {
             formulario = FormularioItem(nome = "tomate", quantidade = "0"),
             onFormularioChange = {},
             onAdicionar = {},
+            onEditar = { _, _ -> false },
+            onRemover = { false },
+            onRestaurar = { false },
             onVoltar = {},
         )
     }

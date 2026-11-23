@@ -69,25 +69,55 @@ fun App() {
                     deepLinks = listOf(navDeepLink<ListaDetalheRota>(basePath = BASE_DEEP_LINK_LISTA)),
                 ) { entrada ->
                     val rota = entrada.toRoute<ListaDetalheRota>()
-                    var formulario by remember { mutableStateOf(FormularioItem()) }
-
-                    ListaDetalheScreen(
-                        lista = state.listas.find { it.id == rota.listaId },
-                        itens = itensState.daLista(rota.listaId),
-                        formulario = formulario,
-                        onFormularioChange = { formulario = it },
-                        onAdicionar = {
-                            if (itensState.adicionar(rota.listaId, formulario)) {
-                                state.registrarAlteracao(rota.listaId)
-                                formulario = FormularioItem()
-                            }
-                        },
+                    ListaDetalheDestino(
+                        listaId = rota.listaId,
+                        state = state,
+                        itensState = itensState,
                         onVoltar = { navController.popBackStack() },
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ListaDetalheDestino(
+    listaId: Int,
+    state: ListaAppState,
+    itensState: ItensState,
+    onVoltar: () -> Unit,
+) {
+    var formulario by remember { mutableStateOf(FormularioItem()) }
+
+    ListaDetalheScreen(
+        lista = state.listas.find { it.id == listaId },
+        itens = itensState.daLista(listaId),
+        formulario = formulario,
+        onFormularioChange = { formulario = it },
+        onAdicionar = {
+            if (itensState.adicionar(listaId, formulario)) {
+                state.registrarAlteracao(listaId)
+                formulario = FormularioItem()
+            }
+        },
+        onEditar = { item, edicao ->
+            itensState.editar(item, edicao).also { salvou ->
+                if (salvou) state.registrarAlteracao(listaId)
+            }
+        },
+        onRemover = { item ->
+            itensState.remover(item).also { removeu ->
+                if (removeu) state.registrarAlteracao(listaId)
+            }
+        },
+        onRestaurar = { item ->
+            itensState.restaurar(item).also { restaurou ->
+                if (restaurou) state.registrarAlteracao(listaId)
+            }
+        },
+        onVoltar = onVoltar,
+    )
 }
 
 @Composable
