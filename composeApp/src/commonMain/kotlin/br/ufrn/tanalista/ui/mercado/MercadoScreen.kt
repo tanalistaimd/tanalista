@@ -176,6 +176,7 @@ private fun DialogoRegistro(
                     valor = preco,
                     onValorChange = { preco = it },
                     rotulo = "Preço unitário encontrado (R$)",
+                    placeholder = "Informe o valor em R$",
                     erro = "Informe um preço válido com até duas casas decimais.",
                     invalido = preco.isNotBlank() && precoCentavos == null,
                 )
@@ -215,6 +216,7 @@ private fun CampoDecimal(
     valor: String,
     onValorChange: (String) -> Unit,
     rotulo: String,
+    placeholder: String? = null,
     erro: String,
     invalido: Boolean,
 ) {
@@ -223,6 +225,7 @@ private fun CampoDecimal(
         onValueChange = onValorChange,
         modifier = Modifier.fillMaxWidth(),
         label = { Text(rotulo) },
+        placeholder = placeholder?.let { texto -> { Text(texto) } },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         isError = invalido,
