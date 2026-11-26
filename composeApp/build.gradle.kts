@@ -31,11 +31,16 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.lifecycle.runtime.compose)
+            implementation(libs.lifecycle.viewmodel.compose)
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
         androidMain.dependencies {
             implementation(compose.uiTooling)
