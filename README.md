@@ -131,7 +131,7 @@ com o app fechado inicia o app sem listas e cai nesse mesmo caso.
 ### Tema e acessibilidade
 
 O app segue o tema claro ou escuro do sistema, com um esquema de cor Material 3 próprio
-(`ui/tema/Tema.kt`). As telas usam só as cores pelos papéis do tema, e um `Scaffold` na
+(`presentation/tema/Tema.kt`). As telas usam só as cores pelos papéis do tema, e um `Scaffold` na
 raiz afasta o conteúdo das barras do sistema. A Activity trata sozinha a troca de tema e a
 rotação, então as listas em memória não se perdem ao girar o aparelho ou mudar o modo.
 
@@ -153,9 +153,20 @@ serviço e percorra a tela de listas e a de detalhe deslizando para a direita.
 Percurso feito em 16/10, no emulador Android em português: as duas telas foram
 percorridas com o TalkBack, e todos os anúncios acima saíram como descritos.
 
-A URL da API é lida de configuração. Sem ela, o aplicativo sobe em modo local, com a
-implementação falsa do repositório — é o que permite rodar e demonstrar o app antes de
-o backend existir.
+### Estado das telas
+
+Listas, detalhes e Modo Mercado têm ViewModels multiplataforma. O Koin injeta o mesmo
+`RepositorioListas` nos três. A implementação atual guarda os dados em memória durante
+a sessão. O domínio mantém as validações de nome e as regras do carrinho.
+
+Ao abrir o app, a tela de listas começa vazia. Crie uma lista e adicione itens para ver
+o estado de sucesso. Um deep link para um ID inexistente mostra o erro e a opção
+**Tentar de novo**. O teste abaixo exercita também a falha de carga simulada e a
+transição de carregamento até a recuperação.
+
+```bash
+./gradlew :composeApp:desktopTest --tests '*EstadoDasListasTest' --tests '*ModulosTest'
+```
 
 ## Estrutura
 

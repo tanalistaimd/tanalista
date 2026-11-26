@@ -1,0 +1,312 @@
+package br.ufrn.tanalista.presentation.lista
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import br.ufrn.tanalista.domain.model.ListaComProgresso
+import br.ufrn.tanalista.domain.model.ListaCompra
+import br.ufrn.tanalista.domain.model.ProgressoCompra
+import br.ufrn.tanalista.presentation.AvisoDaTela
+import br.ufrn.tanalista.presentation.tema.TaNaListaTema
+import org.jetbrains.compose.ui.tooling.preview.Preview
+
+/**
+ * Tela responsável por criar e visualizar listas de compras.
+ *
+ * O estado é elevado: a tela apenas recebe os dados atuais e comunica
+ * as ações do usuário ao componente responsável pelo estado.
+ *
+ * @param listas Listas ordenadas por atualização, com progresso da compra atual.
+ * @param nome Nome atualmente digitado no formulário.
+ * @param erro Mensagem de erro de validação ou `null` quando não há erro.
+ * @param mensagemSucesso Mensagem exibida após uma criação bem-sucedida.
+ * @param onNomeChange Evento disparado quando o nome é alterado.
+ * @param onCriar Evento disparado quando o usuário solicita a criação.
+ * @param modifier Modificador opcional aplicado à tela.
+ * @param onAbrirLista Evento disparado quando o usuário toca em uma lista para ver seus itens.
+ * @param onEditarLista Evento disparado quando o usuário solicita editar uma lista.
+ * @param onExcluirLista Evento disparado quando o usuário solicita excluir uma lista.
+ */
+@Composable
+fun ListaFormScreen(
+    listas: List<ListaComProgresso>,
+    nome: String,
+    erro: String?,
+    mensagemSucesso: String?,
+    onNomeChange: (String) -> Unit,
+    onCriar: () -> Unit,
+    onAbrirLista: (ListaCompra) -> Unit,
+    onEditarLista: (ListaCompra) -> Unit,
+    onExcluirLista: (ListaCompra) -> Unit,
+    modifier: Modifier = Modifier,
+    onAbrirMercado: ((ListaCompra) -> Unit)? = null,
+    aviso: String? = null,
+) {
+    LazyColumn(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+        contentPadding = PaddingValues(vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item {
+            FormularioListaContent(
+                nome = nome,
+                erro = erro,
+                mensagemSucesso = mensagemSucesso,
+                onNomeChange = onNomeChange,
+                onCriar = onCriar,
+            )
+            AvisoDaTela(aviso)
+        }
+
+        item {
+            Text(
+                text = "Minhas listas",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics { heading() },
+            )
+        }
+
+        if (listas.isEmpty()) {
+            item {
+                Text("Nenhuma lista criada ainda.")
+            }
+        } else {
+            items(listas, key = { it.lista.id }) { resumo ->
+                ListaResumoCard(
+                    resumo = resumo,
+                    onAbrir = { onAbrirLista(resumo.lista) },
+                    onEditar = { onEditarLista(resumo.lista) },
+                    onExcluir = { onExcluirLista(resumo.lista) },
+                    onAbrirMercado = onAbrirMercado?.let { abrir -> { abrir(resumo.lista) } },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FormularioListaContent(
+    nome: String,
+    erro: String?,
+    mensagemSucesso: String?,
+    onNomeChange: (String) -> Unit,
+    onCriar: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Título principal da tela.
+        Text(
+            text = "Nova lista",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+
+        // Campo em que o usuário informa o nome da nova lista.
+        OutlinedTextField(
+            value = nome,
+            onValueChange = onNomeChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text("Ex.: Compras do mês")
+            },
+            label = {
+                Text("Nome da lista")
+            },
+            supportingText = {
+                // A mensagem só aparece quando existe algum erro de validação.
+                if (erro != null) {
+                    Text(erro)
+                }
+            },
+            isError = erro != null,
+            singleLine = true,
+        )
+        if (mensagemSucesso != null) {
+            Text(
+                text = mensagemSucesso,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
+        /*
+         * O botão permanece desabilitado enquanto:
+         * - o nome estiver vazio;
+         * - existir algum erro de validação.
+         */
+        Button(
+            onClick = onCriar,
+            enabled = erro == null,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Criar lista")
+        }
+    }
+}
+
+@Composable
+private fun ListaResumoCard(
+    resumo: ListaComProgresso,
+    onAbrir: () -> Unit,
+    onEditar: () -> Unit,
+    onExcluir: () -> Unit,
+    onAbrirMercado: (() -> Unit)?,
+) {
+    Card(
+        onClick = onAbrir,
+        modifier =
+            Modifier.fillMaxWidth().semantics {
+                onClick(label = "abrir itens") {
+                    onAbrir()
+                    true
+                }
+            },
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Text(
+                text = resumo.lista.nome,
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            Text(
+                text = "${resumo.progresso.itensComprados}/${resumo.progresso.totalItens} itens comprados",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier =
+                    Modifier.semantics {
+                        contentDescription =
+                            "${resumo.progresso.itensComprados} de " +
+                            "${resumo.progresso.totalItens} itens comprados"
+                    },
+            )
+
+            /*
+             * Ações disponíveis para cada lista.
+             *
+             * A tela não realiza diretamente a edição ou exclusão:
+             * apenas comunica a ação ao componente responsável pelo estado.
+             */
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(
+                    onClick = onEditar,
+                    modifier = Modifier.semantics { contentDescription = "Editar ${resumo.lista.nome}" },
+                ) {
+                    Text("Editar")
+                }
+
+                TextButton(
+                    onClick = onExcluir,
+                    modifier = Modifier.semantics { contentDescription = "Excluir ${resumo.lista.nome}" },
+                ) {
+                    Text("Excluir")
+                }
+            }
+            if (onAbrirMercado != null) {
+                Button(
+                    onClick = onAbrirMercado,
+                    modifier =
+                        Modifier.fillMaxWidth().semantics {
+                            contentDescription = "Modo Mercado · ${resumo.lista.nome}"
+                        },
+                ) {
+                    Text("Modo Mercado")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Preview da tela de criação de lista.
+ *
+ * Utiliza dados fixos apenas para permitir visualizar o componente
+ * diretamente pelo Android Studio sem precisar executar todo o aplicativo.
+ */
+@Preview
+@Composable
+private fun ListaFormScreenPreview() {
+    TaNaListaTema(escuro = false) {
+        ListaFormScreen(
+            listas =
+                listOf(
+                    ListaComProgresso(
+                        ListaCompra(1, "Compras do mês"),
+                        ProgressoCompra(
+                            itensComprados = 2,
+                            totalItens = 5,
+                        ),
+                    ),
+                ),
+            nome = "Compras do mês",
+            erro = null,
+            mensagemSucesso = null,
+            onNomeChange = {},
+            onCriar = {},
+            onAbrirLista = {},
+            onEditarLista = {},
+            onExcluirLista = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ListaFormScreenVaziaPreview() {
+    TaNaListaTema(escuro = false) {
+        ListaFormScreen(
+            listas = emptyList(),
+            nome = "",
+            erro = null,
+            mensagemSucesso = null,
+            onNomeChange = {},
+            onCriar = {},
+            onAbrirLista = {},
+            onEditarLista = {},
+            onExcluirLista = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ListaFormScreenEscuroPreview() {
+    TaNaListaTema(escuro = true) {
+        ListaFormScreen(
+            listas = listOf(ListaComProgresso(ListaCompra(1, "Compras do mês"), ProgressoCompra(2, 5))),
+            nome = "",
+            erro = "O nome da lista é obrigatório.",
+            mensagemSucesso = null,
+            onNomeChange = {},
+            onCriar = {},
+            onAbrirLista = {},
+            onEditarLista = {},
+            onExcluirLista = {},
+        )
+    }
+}

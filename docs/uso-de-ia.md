@@ -73,3 +73,20 @@ humana; não houve validação manual de interface nesta execução.
 | Issue #8, após o merge do #29 (15/10/2026) — OpenCode (GPT-6.1 Sol Fast), solicitado por Vinicius | Centralizou a contagem de itens por lista, atualizou a data da lista após inclusão válida, acrescentou testes de resumo e ordenação, preview vazio e roteiro de verificação no README. A marcação de comprados continua dependente da #14. Commit, push e abertura do PR autorizados explicitamente por Vinicius | `gradlew.bat ktlintCheck detekt :composeApp:desktopTest :composeApp:assembleDebug --no-daemon` passou, com 34 testes. Validação manual no Android e revisão humana por outro integrante ainda pendentes |
 | Deep link do detalhe da lista (16/10/2026) — Claude Code (Claude Opus 5.5), solicitado por Thallys | Declarou `navDeepLink<ListaDetalheRota>` com base `tanalista://lista`, o `intent-filter` no manifesto, `singleTask` na Activity e o repasse do link recebido com o app aberto ao `NavController`, para não abrir uma segunda Activity com o estado em memória vazio. Documentou o comando `adb` no README | `ktlintCheck detekt :composeApp:desktopTest :composeApp:assembleDebug` passou. No emulador: link para os ids 1 e 2 com o app aberto abriu a lista certa; id 99 mostrou "Lista não encontrada"; com o app fechado, abriu o detalhe com a tela de listas embaixo na pilha; o Voltar retornou às listas nos dois casos |
 | Tema e acessibilidade, #33 (16/10/2026) — Claude Code (Claude Opus 5.5), solicitado por Thallys | Criou o esquema de cor claro e escuro, pôs o `Scaffold` na raiz, acrescentou previews no modo escuro, marcou títulos com `heading()`, deu descrições a Editar, Excluir, Voltar e ao progresso, e anunciou a confirmação de criação. Tornou a tela de listas rolável por inteiro e declarou `configChanges` na Activity, depois que a troca de tema no emulador apagou as listas em memória. Excluiu `ui/tema/` da regra `MagicNumber` do detekt | `ktlintCheck detekt :composeApp:desktopTest :composeApp:assembleDebug` passou. No emulador: capturas nos modos claro e escuro; listas preservadas após trocar o modo e girar; tela deitada rolando sem cortar o cartão; descrições conferidas no dump de acessibilidade (`uiautomator`). O percurso com o TalkBack foi feito por Thallys no emulador em português, e os anúncios saíram como descritos no README |
+
+## Sprint 2
+
+### ViewModels e estados da interface, #42 (26/11/2026)
+
+Thallys solicitou ao Codex (GPT-6) a migração das telas de listas, detalhe e
+Modo Mercado para ViewModels multiplataforma. O Codex separou as camadas,
+montou a injeção com Koin, manteve os fluxos da sessão em um repositório em
+memória e adaptou os testes existentes.
+
+A verificação executou `ktlintCheck`, `detekt`, `:composeApp:desktopTest` e
+`:composeApp:assembleDebug`. Os testes exercitaram falha de carga e nova
+tentativa, injeção do repositório compartilhado, restauração de item comprado,
+edições concorrentes e os identificadores de navegação das versões anteriores.
+No emulador Android, o Codex verificou criação de lista e item, edição,
+remoção e desfazer, atualização do total, deep links e recriação da tela após
+trocar o tamanho da fonte.

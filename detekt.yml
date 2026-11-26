@@ -30,7 +30,7 @@ style:
       - '**/desktopTest/**'
       - '**/androidUnitTest/**'
       - '**/androidInstrumentedTest/**'
-      - '**/ui/tema/**'
+      - '**/presentation/tema/**'
   UnusedPrivateMember:
     ignoreAnnotated: ['Composable', 'Preview']
   MaxLineLength:
